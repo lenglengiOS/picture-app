@@ -11,7 +11,11 @@ const Home = () => {
     setDetail(1);
   };
 
-  return <div className="home-page"></div>;
+  return (
+    <div className="home-page">
+      <Button onClick={goToDetail}>压缩图片</Button>
+    </div>
+  );
 };
 
 export default Home;

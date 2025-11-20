@@ -7,15 +7,7 @@ import "./Detail.css";
 const Detail = () => {
   const [detail, setDetail] = useAtom(showDetailAtom);
 
-  const goToDetail = () => {
-    setDetail(1);
-  };
-
-  return (
-    <div className="detail-page">
-      <Button onClick={goToDetail}>压缩图片详情页面</Button>
-    </div>
-  );
+  return <div className="detail-page"></div>;
 };
 
 export default Detail;
