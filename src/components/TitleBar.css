@@ -2,6 +2,7 @@
   -webkit-app-region: no-drag; /* ⚡ 点击按钮不拖动窗口 */
   width: 30px;
   height: 30px;
+  cursor: pointer;
 }
 
 .home-btn {
@@ -10,4 +11,5 @@
   border: none;
   font-size: 14px;
   font-weight: bold;
+  cursor: pointer;
 }

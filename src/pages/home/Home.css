@@ -1,4 +1,5 @@
 .home-page {
   flex: 1;
-  background-color: blue;
+  display: flex;
+  flex-direction: column;
 }

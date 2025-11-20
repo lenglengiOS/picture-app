@@ -1,6 +1,8 @@
 import React from "react";
 import styled from "styled-components";
 import Button from "@material-ui/core/Button";
+import { useAtom } from "jotai";
+import { showDetailAtom } from "@src/store/home";
 import "./TitleBar.css";
 
 const ToolbarContainer = styled.div`
@@ -25,14 +27,21 @@ const ToolbarRight = styled.div`
 `;
 
 export default function Toolbar() {
-  const onClickBtn = () => {
-    console.log("按钮1");
+  const [, setDetail] = useAtom(showDetailAtom);
+
+  const goHome = () => {
+    setDetail(0);
   };
+
   return (
     <ToolbarContainer>
       <ToolbarLeft>
-        <img class="logo" src={require("../../build/icon.png")} />
-        <Button class="home-btn" variant="text" onClick={onClickBtn}>
+        <img
+          onClick={goHome}
+          className="logo"
+          src={require("../../build/icon.png")}
+        />
+        <Button class="home-btn" variant="text" onClick={goHome}>
           阳光图片转换器
         </Button>
       </ToolbarLeft>
