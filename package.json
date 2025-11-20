@@ -12,7 +12,7 @@
   },
   "build": {
     "appId": "com.sunshine.app",
-    "productName": "阳光图像处理",
+    "productName": "阳光图片转换器",
     "directories": {
       "output": "dist"
     },
