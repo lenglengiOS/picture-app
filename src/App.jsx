@@ -1,9 +1,20 @@
 import React from "react";
-import { createRoot } from "react-dom/client";
-import Button from "@material-ui/core/Button";
+import TitleBar from "@src/components/TitleBar";
+import styled from "styled-components";
+import Home from "@src/pages/home/Home";
 
-const App = () => {
-  return <Button variant="contained">你好，世界66</Button>;
-};
+const AppContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  background-color: #e9edf8;
+  flex: 1;
+`;
 
-export default App;
+export default function App() {
+  return (
+    <AppContainer>
+      <TitleBar />
+      <Home />
+    </AppContainer>
+  );
+}

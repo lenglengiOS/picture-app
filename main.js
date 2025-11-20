@@ -7,8 +7,12 @@ try {
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1100,
+    height: 700,
+    minWidth: 1000,
+    minHeight: 600,
+    frame: true,
+    titleBarStyle: "hidden",
     icon: path.join(__dirname, "build/icon.png"),
   });
 

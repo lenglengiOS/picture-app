@@ -1,0 +1,13 @@
+.logo {
+  -webkit-app-region: no-drag; /* ⚡ 点击按钮不拖动窗口 */
+  width: 30px;
+  height: 30px;
+}
+
+.home-btn {
+  -webkit-app-region: no-drag; /* ⚡ 点击按钮不拖动窗口 */
+  color: #333;
+  border: none;
+  font-size: 14px;
+  font-weight: bold;
+}
