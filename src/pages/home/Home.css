@@ -1,5 +1,87 @@
 .home-page {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  padding: 20px;
+  box-sizing: border-box;
+
+  /* 高度占满可视区域 */
+  height: calc(100vh - 40px);
+
+  /* 超出内容可滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* 平滑滚动（iOS 和 WebKit） */
+  -webkit-overflow-scrolling: touch;
+}
+
+.top {
+  display: flex;
+  flex-direction: row;
+}
+
+.title-view {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.title-line {
+  width: 5px;
+  border-radius: 3px;
+  height: 16px;
+  background-color: #0176ff;
+}
+
+.title-text {
+  margin-left: 6px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.card {
+  padding: 20px;
+  background-color: #e8f2ff;
+  border-radius: 12px;
+  border: 1px solid #fff;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.type-content {
+  margin-bottom: 20px;
+  display: inline-flex;
+  flex-direction: column;
+  gap: 12px;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 100px;
+  height: 100px;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.item-img {
+  width: 40px;
+  height: 40px;
+  background-color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.item-title {
+  font-size: 14px;
+  color: #333;
+  font-weight: 400;
 }

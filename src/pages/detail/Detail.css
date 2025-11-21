@@ -1,4 +1,19 @@
 .detail-page {
   flex: 1;
-  background-color: green;
+  height: calc(100vh - 40px);
+  background-color: #fff;
+  flex-direction: row;
+}
+
+.left {
+  width: 160px;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  /* 超出内容可滚动 */
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  /* 平滑滚动（iOS 和 WebKit） */
+  -webkit-overflow-scrolling: touch;
 }

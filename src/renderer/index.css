@@ -8,4 +8,24 @@ body,
   flex-direction: column;
   margin: 0;
   padding: 0;
+  user-select: none;
+}
+
+/* 针对 home-page 内的滚动条 */
+::-webkit-scrollbar {
+  width: 5px; /* 垂直滚动条宽度 */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; /* 滚动条轨道颜色 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c5d4; /* 滚动条滑块颜色 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #999; /* 鼠标悬浮滑块颜色 */
 }

@@ -1,7 +1,13 @@
 import React from "react";
-import { Button } from "@material-ui/core";
 import { useAtom } from "jotai";
 import { showDetailAtom } from "@src/store/home";
+import {
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Typography,
+} from "@material-ui/core";
+import { ExpandMore } from "@material-ui/icons";
 import "./Detail.css";
 
 async function selectImage() {
@@ -43,9 +49,13 @@ const Detail = () => {
 
   return (
     <div className="detail-page">
-      <Button onClick={runCompress}>选择图片</Button>
+      <Menus />
     </div>
   );
+};
+
+const Menus = () => {
+  return <div className="left"></div>;
 };
 
 export default Detail;

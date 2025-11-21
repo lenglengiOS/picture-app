@@ -9,7 +9,7 @@ const ToolbarContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-left: 68px;
+  padding-left: 68px;
   height: 40px; /* 保留空间，不覆盖系统标题栏 */
   color: white;
   box-sizing: border-box;
@@ -27,14 +27,16 @@ const ToolbarRight = styled.div`
 `;
 
 export default function Toolbar() {
-  const [, setDetail] = useAtom(showDetailAtom);
+  const [detail, setDetail] = useAtom(showDetailAtom);
 
   const goHome = () => {
     setDetail(0);
   };
 
   return (
-    <ToolbarContainer>
+    <ToolbarContainer
+      style={{ backgroundColor: detail === 0 ? "transparent" : "#FFF" }}
+    >
       <ToolbarLeft>
         <img
           onClick={goHome}
