@@ -2,7 +2,7 @@ const path = require("path");
 
 module.exports = {
   mode: "development",
-  entry: "./src/renderer/index.jsx",
+  entry: "./src/renderer/index.tsx",
   output: {
     path: path.resolve(__dirname, "src/renderer"),
     filename: "bundle.js",
@@ -27,10 +27,15 @@ module.exports = {
         test: /\.(png|jpe?g|gif|svg)$/i,
         type: "asset/resource",
       },
+      {
+        test: /\.tsx?$/,
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
     ],
   },
   resolve: {
-    extensions: [".js", ".jsx"],
+    extensions: [".ts", ".tsx", ".js", ".jsx", ".json"],
     alias: {
       "@src": path.resolve(__dirname, "./src"),
     },

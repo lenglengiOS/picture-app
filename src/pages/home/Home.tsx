@@ -59,7 +59,7 @@ const Home = () => {
   );
 };
 
-const Item = ({ icon, title = "", index }) => {
+const Item = ({ icon, title = "", index }: any) => {
   const [, setDetail] = useAtom(showDetailAtom);
 
   const goToDetail = () => {

@@ -10,10 +10,14 @@
   height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
+  border-right: 1px solid #e8e8e8;
   /* 超出内容可滚动 */
   overflow-y: auto;
   overflow-x: hidden;
-
   /* 平滑滚动（iOS 和 WebKit） */
   -webkit-overflow-scrolling: touch;
+}
+
+.item-group {
+  background-color: red;
 }

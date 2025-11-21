@@ -9,6 +9,8 @@ import {
 } from "@material-ui/core";
 import { ExpandMore } from "@material-ui/icons";
 import "./Detail.css";
+import { Flex } from "antd";
+import { MergeCellsOutlined } from "@ant-design/icons";
 
 async function selectImage() {
   return await window.electronAPI.selectImage();
@@ -18,7 +20,7 @@ async function selectOutputFolder() {
   return await window.electronAPI.selectOutputFolder();
 }
 
-async function compressImage(options) {
+async function compressImage(options: any) {
   return await window.electronAPI.compressImage(options);
 }
 
@@ -27,7 +29,7 @@ const Detail = () => {
 
   // 示例使用
   async function runCompress() {
-    const inputPath = await selectImage();
+    const inputPath: any = await selectImage();
     if (!inputPath) return alert("未选择图片");
 
     const outputDir = await selectOutputFolder();
@@ -55,7 +57,14 @@ const Detail = () => {
 };
 
 const Menus = () => {
-  return <div className="left"></div>;
+  return (
+    <div className="left">
+      <Flex gap={2} justify="center" className="item-group">
+        <MergeCellsOutlined color="#333" size={16} />
+        <span>图片压缩</span>
+      </Flex>
+    </div>
+  );
 };
 
 export default Detail;

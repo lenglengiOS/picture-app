@@ -3,13 +3,16 @@
     "target": "ES2020",
     "module": "ESNext",
     "jsx": "react-jsx",
+    "strict": true,
+    "moduleResolution": "bundler",
+    "isolatedModules": true,
     "allowJs": true,
     "checkJs": false,
-    "moduleResolution": "bundler",
     "baseUrl": ".",
     "paths": {
       "@src/*": ["src/*"]
-    }
+    },
+    "types": ["node", "electron"]
   },
-  "include": ["src/**/*"]
+  "include": ["src", "electron", "preload", "src/global.d.ts"]
 }

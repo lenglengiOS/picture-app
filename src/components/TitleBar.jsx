@@ -14,6 +14,7 @@ const ToolbarContainer = styled.div`
   color: white;
   box-sizing: border-box;
   -webkit-app-region: drag; /* ⚡ 整个 TitleBar 可拖动 */
+  border-bottom: 1px solid #e8e8e8;
 `;
 
 const ToolbarLeft = styled.div`
