@@ -386,21 +386,15 @@ const CompressionImageListView = () => {
             添加图片
           </Button>
         </Upload>
-        <DeleteTwoTone
-          style={{ color: "#3069f2", fontSize: 14, marginLeft: "auto" }}
-          onClick={handleBatchDelete}
-        />
-        <p
-          style={{
-            color: "#3069f2",
-            fontSize: 14,
-            marginRight: 20,
-            cursor: "pointer",
-          }}
+        <Button
+          type="link"
+          disabled={selectedRowKeys.length === 0}
+          style={{ marginLeft: "auto" }}
+          icon={<DeleteOutlined />}
           onClick={handleBatchDelete}
         >
-          删除
-        </p>
+          批量删除
+        </Button>
       </Flex>
       <div style={{ flex: 1, minHeight: 0 }}>
         <Table
@@ -418,14 +412,17 @@ const CompressionImageListView = () => {
       </div>
 
       <Flex vertical className="detail-bottom-tools">
-        <Flex>
-          <p>压缩模式</p>
+        <Flex align="flex-start">
+          <span>压缩模式</span>
+          <span>压缩模式</span>
         </Flex>
-        <Flex>
-          <p>输出格式</p>
+        <Flex align="start">
+          <span>输出格式</span>
+          <span>输出格式</span>
         </Flex>
-        <Flex>
-          <p>输出目录</p>
+        <Flex align="start">
+          <span>输出目录</span>
+          <span>输出目录</span>
         </Flex>
       </Flex>
     </div>
