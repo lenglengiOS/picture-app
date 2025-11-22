@@ -60,3 +60,10 @@
   font-size: 12px;
   color: #999;
 }
+
+.detail-bottom-tools {
+  margin-top: auto;
+  background-color: #fbfbfd;
+  border-top: 1px solid #d1d8e6;
+  padding: 12px;
+}

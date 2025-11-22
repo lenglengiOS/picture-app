@@ -289,7 +289,7 @@ const CompressionImageListView = () => {
 
   return (
     <div className="detail-right">
-      <Flex gap={2} style={{ padding: "0 12px" }}>
+      <Flex gap={2} align="center" style={{ height: 40, paddingLeft: 20 }}>
         <FileAddOutlined
           style={{ color: "#3069f2", fontSize: 14 }}
           onClick={() => {
@@ -316,17 +316,32 @@ const CompressionImageListView = () => {
           删除
         </p>
       </Flex>
-      <Table
-        columns={columns}
-        dataSource={compressionImageList}
-        rowKey="uid"
-        rowSelection={rowSelection}
-        pagination={false}
-        scroll={{
-          y: "calc(100vh - 200px)",
-          x: true,
-        }}
-      />
+      <div style={{ flex: 1, minHeight: 0 }}>
+        <Table
+          columns={columns}
+          dataSource={compressionImageList}
+          rowKey="uid"
+          rowSelection={rowSelection}
+          pagination={false}
+          scroll={{
+            y: "calc(100vh - 320px)",
+            x: true,
+          }}
+          style={{ height: "100%" }}
+        />
+      </div>
+
+      <Flex vertical className="detail-bottom-tools">
+        <Flex>
+          <p>压缩模式</p>
+        </Flex>
+        <Flex>
+          <p>输出格式</p>
+        </Flex>
+        <Flex>
+          <p>输出目录</p>
+        </Flex>
+      </Flex>
     </div>
   );
 };
