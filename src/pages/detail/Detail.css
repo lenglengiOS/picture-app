@@ -2,6 +2,7 @@
   flex: 1;
   height: calc(100vh - 40px);
   background-color: #fff;
+  display: flex;
   flex-direction: row;
 }
 
@@ -19,5 +20,21 @@
 }
 
 .item-group {
-  background-color: red;
+  height: 44px;
+  font-size: 16px;
+  color: #333;
+  font-weight: bold;
+}
+
+.menu-item {
+  height: 44px;
+  font-size: 16px;
+  color: #333;
+}
+
+.menu-item-select {
+  height: 44px;
+  font-size: 16px;
+  color: #3069f2;
+  background-color: #f0f3fd;
 }

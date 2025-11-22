@@ -7,10 +7,14 @@ import {
   AccordionDetails,
   Typography,
 } from "@material-ui/core";
-import { ExpandMore } from "@material-ui/icons";
-import "./Detail.css";
 import { Flex } from "antd";
-import { MergeCellsOutlined } from "@ant-design/icons";
+import {
+  BlockOutlined,
+  MergeCellsOutlined,
+  BorderInnerOutlined,
+} from "@ant-design/icons";
+import "./Detail.css";
+import ImageCompression from "@src/components/ImageCompression";
 
 async function selectImage() {
   return await window.electronAPI.selectImage();
@@ -52,16 +56,31 @@ const Detail = () => {
   return (
     <div className="detail-page">
       <Menus />
+      {detail === 1 && <ImageCompression />}
     </div>
   );
 };
 
 const Menus = () => {
+  const [detail, setDetail] = useAtom(showDetailAtom);
   return (
     <div className="left">
-      <Flex gap={2} justify="center" className="item-group">
-        <MergeCellsOutlined color="#333" size={16} />
+      <Flex gap={2} justify="center" align="center" className="item-group">
+        <MergeCellsOutlined />
+        <span>图片处理</span>
+      </Flex>
+
+      <Flex
+        justify="center"
+        align="center"
+        className={detail === 1 ? "menu-item-select" : "menu-item"}
+      >
         <span>图片压缩</span>
+      </Flex>
+
+      <Flex gap={2} justify="center" align="center" className="item-group">
+        <BlockOutlined />
+        <span>图片转换</span>
       </Flex>
     </div>
   );

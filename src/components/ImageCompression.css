@@ -1,0 +1,44 @@
+.detail-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-right-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.detail-right-center .ant-upload-drag {
+  width: 600px;
+  height: 300px;
+}
+
+.detail-right-bottom {
+  height: 80px;
+  width: 100%;
+  background-color: #fbfbfd;
+  border-top: 1px solid #e2e6f3;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.detail-bottom-item {
+  flex: 1;
+  justify-content: center;
+}
+
+.detail-bottom-title {
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.detail-bottom-subTitle {
+  font-size: 12px;
+  color: #999;
+}
