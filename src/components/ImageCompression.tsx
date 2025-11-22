@@ -45,6 +45,23 @@ const CompressionImageListView = () => {
     compressionImageListAtom
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // 初始化压缩状态
+  useEffect(() => {
+    setCompressionImageList((prev) =>
+      prev.map((item) => ({
+        ...item,
+        compressionStatus: item.compressionStatus || "pending",
+      }))
+    );
+
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // 格式化文件大小
   const formatFileSize = (bytes: number): string => {
@@ -277,29 +294,98 @@ const CompressionImageListView = () => {
     },
   };
 
-  // 初始化压缩状态
-  useEffect(() => {
-    setCompressionImageList((prev) =>
-      prev.map((item) => ({
-        ...item,
-        compressionStatus: item.compressionStatus || "pending",
-      }))
-    );
-  }, []);
+  const beforeUpload: UploadProps["beforeUpload"] = (file) => {
+    const isValidType =
+      file.type === "image/jpeg" ||
+      file.type === "image/jpg" ||
+      file.type === "image/png" ||
+      file.type === "image/gif";
+    if (!isValidType) {
+      message.error("只支持 jpg、jpeg、png、gif 格式的图片！");
+      return Upload.LIST_IGNORE;
+    }
+    return false; // 阻止自动上传
+  };
+
+  // 监听文件选择变化的回调
+  const handleChange: UploadProps["onChange"] = (info) => {
+    const { fileList } = info;
+
+    // 过滤掉无效的文件（被 beforeUpload 拒绝的文件不会出现在 fileList 中）
+    const validFiles = fileList.filter((file) => {
+      const isValidType =
+        file.type === "image/jpeg" ||
+        file.type === "image/jpg" ||
+        file.type === "image/png" ||
+        file.type === "image/gif";
+      return isValidType && file.status !== "error";
+    });
+
+    // 使用防抖，确保只执行一次
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      // 为每个文件获取尺寸信息
+      const filesWithDimensions = await Promise.all(
+        validFiles.map(async (file) => {
+          const originFile = file.originFileObj || file;
+          try {
+            const dimensions = await getImageDimensions(originFile as File);
+            return {
+              uid: file.uid,
+              name: file.name,
+              size: file.size || 0,
+              type: file.type || "",
+              originFileObj: originFile as File,
+              width: dimensions.width,
+              height: dimensions.height,
+              compressionStatus: "pending" as const,
+            };
+          } catch (error) {
+            console.error(`获取图片 ${file.name} 尺寸失败:`, error);
+            return {
+              uid: file.uid,
+              name: file.name,
+              size: file.size || 0,
+              type: file.type || "",
+              originFileObj: originFile as File,
+              compressionStatus: "pending" as const,
+            };
+          }
+        })
+      );
+
+      // 更新文件列表到状态中（包含尺寸信息）
+      setCompressionImageList(filesWithDimensions);
+
+      // 可以在这里添加其他处理逻辑
+      console.log("选择的文件列表（包含尺寸）:", filesWithDimensions);
+      debounceTimerRef.current = null;
+    }, 300); // 300ms 内的多次调用会被合并为一次
+  };
 
   return (
     <div className="detail-right">
-      <Flex gap={2} align="center" style={{ height: 40, paddingLeft: 20 }}>
-        <FileAddOutlined
-          style={{ color: "#3069f2", fontSize: 14 }}
-          onClick={() => {
-            // 可以添加重新选择图片的逻辑
-            setCompressionImageList([]);
-          }}
-        />
-        <p style={{ color: "#3069f2", fontSize: 14, cursor: "pointer" }}>
-          添加图片
-        </p>
+      <Flex gap={2} align="center" style={{ height: 40 }}>
+        <Upload
+          multiple
+          showUploadList={false}
+          accept="image/jpeg,image/jpg,image/png,image/gif"
+          beforeUpload={beforeUpload}
+          onChange={handleChange}
+        >
+          <Button
+            className="upload-btn"
+            type="text"
+            icon={
+              <FileAddOutlined style={{ color: "#3069f2", fontSize: 14 }} />
+            }
+          >
+            添加图片
+          </Button>
+        </Upload>
         <DeleteTwoTone
           style={{ color: "#3069f2", fontSize: 14, marginLeft: "auto" }}
           onClick={handleBatchDelete}
@@ -358,31 +444,6 @@ const SelectImageView = () => {
       }
     };
   }, []);
-
-  // 获取图片尺寸的工具函数
-  const getImageDimensions = (
-    file: File
-  ): Promise<{ width: number; height: number }> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      const url = URL.createObjectURL(file);
-
-      img.onload = () => {
-        URL.revokeObjectURL(url); // 释放内存
-        resolve({
-          width: img.naturalWidth,
-          height: img.naturalHeight,
-        });
-      };
-
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("无法读取图片尺寸"));
-      };
-
-      img.src = url;
-    });
-  };
 
   const beforeUpload: UploadProps["beforeUpload"] = (file) => {
     const isValidType =
@@ -455,6 +516,7 @@ const SelectImageView = () => {
       debounceTimerRef.current = null;
     }, 300); // 300ms 内的多次调用会被合并为一次
   };
+
   return (
     <div className="detail-right">
       <div className="detail-right-center">
@@ -503,6 +565,31 @@ const SelectImageView = () => {
       </div>
     </div>
   );
+};
+
+// 获取图片尺寸的工具函数
+const getImageDimensions = (
+  file: File
+): Promise<{ width: number; height: number }> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+
+    img.onload = () => {
+      URL.revokeObjectURL(url); // 释放内存
+      resolve({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("无法读取图片尺寸"));
+    };
+
+    img.src = url;
+  });
 };
 
 export default ImageCompression;

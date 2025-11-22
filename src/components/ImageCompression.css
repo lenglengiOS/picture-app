@@ -67,3 +67,10 @@
   border-top: 1px solid #d1d8e6;
   padding: 12px;
 }
+
+.upload-btn {
+  color: #3069f2;
+  font-size: 14px;
+  cursor: "pointer";
+  border: "none";
+}
