@@ -20,9 +20,30 @@ import "./ImageCompression.css";
 const { Dragger } = Upload;
 
 const ImageCompression = () => {
-  const [compressionImageList, setCompressionImageList] = useAtom(
-    compressionImageListAtom
+  const [compressionImageList] = useAtom(compressionImageListAtom);
+
+  // 未选择图片时，展示选择图片组件
+  if (compressionImageList.length === 0) {
+    return <SelectImageView />;
+  }
+
+  // 已选择图片，展示图片列表和处理页面
+  return <CompressionImageListView />;
+};
+
+const CompressionImageListView = () => {
+  return (
+    <div className="detail-right">
+      <Flex>
+        <p>添加图片</p>
+        <p>添加文件夹</p>
+      </Flex>
+    </div>
   );
+};
+
+const SelectImageView = () => {
+  const [, setCompressionImageList] = useAtom(compressionImageListAtom);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // 组件卸载时清理定时器
@@ -128,62 +149,54 @@ const ImageCompression = () => {
       debounceTimerRef.current = null;
     }, 300); // 300ms 内的多次调用会被合并为一次
   };
-
-  if (compressionImageList.length === 0) {
-    return (
-      <div className="detail-right">
-        <div className="detail-right-center">
-          <Dragger
-            multiple
-            showUploadList={false}
-            accept="image/jpeg,image/jpg,image/png,image/gif"
-            beforeUpload={beforeUpload}
-            onChange={handleChange}
-          >
-            <p className="ant-upload-drag-icon">
-              <InboxOutlined />
-            </p>
-            <p className="ant-upload-text">
-              将图片文件拖拽到此处，也可以点击本区域添加图片
-            </p>
-            <p className="ant-upload-hint">
-              *支持jpg、jpeg、png、gif格式的图片
-            </p>
-          </Dragger>
-        </div>
-        <div className="detail-right-bottom">
-          <Flex gap={6} className="detail-bottom-item">
-            <FileImageFilled style={{ fontSize: 40, color: "#b1cffb" }} />
-            <Flex vertical justify="center">
-              <span className="detail-bottom-title">第一步：添加文件</span>
-              <span className="detail-bottom-subTitle">支持批量添加文件</span>
-            </Flex>
-          </Flex>
-          <RightOutlined style={{ fontSize: 20, color: "#b8cdeb" }} />
-          <Flex gap={6} className="detail-bottom-item">
-            <SettingFilled style={{ fontSize: 40, color: "#b1cffb" }} />
-            <Flex vertical justify="center">
-              <span className="detail-bottom-title">第二步：设置压缩参数</span>
-              <span className="detail-bottom-subTitle">
-                支持自定义压缩，缩小优先等模式
-              </span>
-            </Flex>
-          </Flex>
-          <RightOutlined style={{ fontSize: 20, color: "#b8cdeb" }} />
-          <Flex gap={6} className="detail-bottom-item">
-            <ProductFilled style={{ fontSize: 40, color: "#b1cffb" }} />
-            <Flex vertical justify="center">
-              <span className="detail-bottom-title">第三步：开始压缩</span>
-              <span className="detail-bottom-subTitle">
-                点击压缩按钮开始压缩
-              </span>
-            </Flex>
-          </Flex>
-        </div>
+  return (
+    <div className="detail-right">
+      <div className="detail-right-center">
+        <Dragger
+          multiple
+          showUploadList={false}
+          accept="image/jpeg,image/jpg,image/png,image/gif"
+          beforeUpload={beforeUpload}
+          onChange={handleChange}
+        >
+          <p className="ant-upload-drag-icon">
+            <InboxOutlined />
+          </p>
+          <p className="ant-upload-text">
+            将图片文件拖拽到此处，也可以点击本区域添加图片
+          </p>
+          <p className="ant-upload-hint">*支持jpg、jpeg、png、gif格式的图片</p>
+        </Dragger>
       </div>
-    );
-  }
-  return <div></div>;
+      <div className="detail-right-bottom">
+        <Flex gap={6} className="detail-bottom-item">
+          <FileImageFilled style={{ fontSize: 40, color: "#b1cffb" }} />
+          <Flex vertical justify="center">
+            <span className="detail-bottom-title">第一步：添加文件</span>
+            <span className="detail-bottom-subTitle">支持批量添加文件</span>
+          </Flex>
+        </Flex>
+        <RightOutlined style={{ fontSize: 20, color: "#b8cdeb" }} />
+        <Flex gap={6} className="detail-bottom-item">
+          <SettingFilled style={{ fontSize: 40, color: "#b1cffb" }} />
+          <Flex vertical justify="center">
+            <span className="detail-bottom-title">第二步：设置压缩参数</span>
+            <span className="detail-bottom-subTitle">
+              支持自定义压缩，缩小优先等模式
+            </span>
+          </Flex>
+        </Flex>
+        <RightOutlined style={{ fontSize: 20, color: "#b8cdeb" }} />
+        <Flex gap={6} className="detail-bottom-item">
+          <ProductFilled style={{ fontSize: 40, color: "#b1cffb" }} />
+          <Flex vertical justify="center">
+            <span className="detail-bottom-title">第三步：开始压缩</span>
+            <span className="detail-bottom-subTitle">点击压缩按钮开始压缩</span>
+          </Flex>
+        </Flex>
+      </div>
+    </div>
+  );
 };
 
 export default ImageCompression;

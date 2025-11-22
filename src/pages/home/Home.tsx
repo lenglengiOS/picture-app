@@ -21,6 +21,16 @@ const Home = () => {
             icon={require("@src/assets/jpg.png")}
             index={1}
           />
+          <Item
+            title="PNG压缩"
+            icon={require("@src/assets/png.png")}
+            index={1}
+          />
+          <Item
+            title="GIF压缩"
+            icon={require("@src/assets/gif.png")}
+            index={1}
+          />
         </div>
       </div>
 
