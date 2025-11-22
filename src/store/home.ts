@@ -15,4 +15,9 @@ export type CompressionImageType = {
   originFileObj: File;
   width?: number;
   height?: number;
+  // 压缩后的信息
+  compressedSize?: number;
+  compressedWidth?: number;
+  compressedHeight?: number;
+  compressionStatus?: "pending" | "compressed" | "compressing";
 };

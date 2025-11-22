@@ -8,6 +8,8 @@
 
 .left {
   width: 160px;
+  min-width: 160px;
+  flex-shrink: 0;
   height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
