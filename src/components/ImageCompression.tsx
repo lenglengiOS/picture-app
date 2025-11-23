@@ -5,7 +5,7 @@ import {
   CompressionImageType,
   showDetailAtom,
 } from "@src/store/home";
-import { Flex, Table, Button, Tag } from "antd";
+import { Flex, Table, Button, Tag, Radio } from "antd";
 import {
   BlockOutlined,
   MergeCellsOutlined,
@@ -29,7 +29,11 @@ import { TableRowSelection } from "antd/es/table/interface";
 const { Dragger } = Upload;
 
 const ImageCompression = () => {
-  const [compressionImageList] = useAtom(compressionImageListAtom);
+  const [compressionImageList, setCompressionImageList] = useAtom(
+    compressionImageListAtom
+  );
+
+  useEffect(() => {}, []);
 
   // 未选择图片时，展示选择图片组件
   if (compressionImageList.length === 0) {
@@ -411,18 +415,23 @@ const CompressionImageListView = () => {
         />
       </div>
 
-      <Flex vertical className="detail-bottom-tools">
+      <Flex vertical justify="space-around" className="detail-bottom-tools">
         <Flex align="flex-start">
-          <span>压缩模式</span>
-          <span>压缩模式</span>
+          <span className="detail-bottom-tools-title">压缩模式：</span>
+          <Radio className="detail-bottom-tools-radio">自定义</Radio>
+          <Radio className="detail-bottom-tools-radio">缩小优先</Radio>
+          <Radio className="detail-bottom-tools-radio">均衡压缩</Radio>
+          <Radio className="detail-bottom-tools-radio">清晰优先</Radio>
         </Flex>
         <Flex align="start">
-          <span>输出格式</span>
-          <span>输出格式</span>
+          <span className="detail-bottom-tools-title">输出格式：</span>
+          <Radio className="detail-bottom-tools-radio">原格式</Radio>
+          <Radio className="detail-bottom-tools-radio">转为JPG</Radio>
         </Flex>
         <Flex align="start">
-          <span>输出目录</span>
-          <span>输出目录</span>
+          <span className="detail-bottom-tools-title">输出目录：</span>
+          <Radio className="detail-bottom-tools-radio">原文件夹</Radio>
+          <Radio className="detail-bottom-tools-radio">自定义</Radio>
         </Flex>
       </Flex>
     </div>

@@ -12,6 +12,7 @@ import {
   BlockOutlined,
   MergeCellsOutlined,
   BorderInnerOutlined,
+  PictureOutlined,
 } from "@ant-design/icons";
 import "./Detail.css";
 import ImageCompression from "@src/components/ImageCompression";
@@ -66,7 +67,7 @@ const Menus = () => {
   return (
     <div className="left">
       <Flex gap={2} justify="center" align="center" className="item-group">
-        <MergeCellsOutlined />
+        <PictureOutlined style={{ fontSize: 18, marginRight: 2 }} />
         <span>图片处理</span>
       </Flex>
 
@@ -79,7 +80,7 @@ const Menus = () => {
       </Flex>
 
       <Flex gap={2} justify="center" align="center" className="item-group">
-        <BlockOutlined />
+        <BlockOutlined style={{ fontSize: 20, marginRight: 2 }} />
         <span>图片转换</span>
       </Flex>
     </div>
