@@ -408,7 +408,7 @@ const CompressionImageListView = () => {
           rowSelection={rowSelection}
           pagination={false}
           scroll={{
-            y: "calc(100vh - 320px)",
+            y: "calc(100vh - 360px)",
             x: true,
           }}
           style={{ height: "100%" }}
