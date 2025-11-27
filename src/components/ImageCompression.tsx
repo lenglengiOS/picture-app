@@ -149,6 +149,14 @@ const CompressionImageListView = () => {
     };
   }, []);
 
+  // 当图片列表从空变为非空时，默认勾选所有图片
+  useEffect(() => {
+    if (compressionImageList.length > 0 && selectedRowKeys.length === 0) {
+      const allUids = compressionImageList.map((item) => item.uid);
+      setSelectedRowKeys(allUids);
+    }
+  }, [compressionImageList]);
+
   // 格式化文件大小
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return "0 B";
@@ -434,7 +442,7 @@ const CompressionImageListView = () => {
 
     debounceTimerRef.current = setTimeout(async () => {
       // 为每个文件获取尺寸信息
-      const filesWithDimensions = await Promise.all(
+      const newFilesWithDimensions = await Promise.all(
         validFiles.map(async (file) => {
           const originFile = file.originFileObj || file;
           try {
@@ -463,11 +471,30 @@ const CompressionImageListView = () => {
         })
       );
 
-      // 更新文件列表到状态中（包含尺寸信息）
-      setCompressionImageList(filesWithDimensions);
+      // 合并到现有列表：追加新文件到末尾，同时去重（基于 uid）
+      // 先获取当前列表以计算新文件
+      const currentList = compressionImageList;
+      const existingUids = new Set(currentList.map((item) => item.uid));
+      // 过滤掉已存在的文件，只保留新文件
+      const uniqueNewFiles = newFilesWithDimensions.filter(
+        (file) => !existingUids.has(file.uid)
+      );
+
+      // 将新文件追加到列表末尾
+      if (uniqueNewFiles.length > 0) {
+        setCompressionImageList((prevList) => [...prevList, ...uniqueNewFiles]);
+
+        // 只勾选新添加的图片，保持原有的选中状态
+        const newFileUids = uniqueNewFiles.map((file) => file.uid);
+        setSelectedRowKeys((prevKeys) => {
+          // 合并原有的选中项和新添加的文件，去重
+          const combined = [...prevKeys, ...newFileUids];
+          return [...new Set(combined)];
+        });
+      }
 
       // 可以在这里添加其他处理逻辑
-      console.log("选择的文件列表（包含尺寸）:", filesWithDimensions);
+      console.log("新添加的文件列表:", newFilesWithDimensions);
       debounceTimerRef.current = null;
     }, 300); // 300ms 内的多次调用会被合并为一次
   };
