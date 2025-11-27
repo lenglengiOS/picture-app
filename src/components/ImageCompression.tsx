@@ -29,6 +29,7 @@ import { TableRowSelection } from "antd/es/table/interface";
 import { processImages } from "@src/utils/processImages";
 import type { CompressTask } from "@src/utils/compressSingleImageWithProgress";
 import { saveCompressedResult } from "@src/utils/saveCompressedResult";
+import type { CompressModeKey } from "@src/utils/compressModes";
 const { Dragger } = Upload;
 
 const ImageCompression = () => {
@@ -55,6 +56,8 @@ const CompressionImageListView = () => {
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [compressionMode, setCompressionMode] =
+    useState<CompressModeKey>("balance");
   const [outputFormat, setOutputFormat] = useState<"origin" | "jpg">("origin");
   const [outputDirMode, setOutputDirMode] = useState<"origin" | "custom">(
     "custom"
@@ -196,7 +199,7 @@ const CompressionImageListView = () => {
       await new Promise<void>((resolve, reject) => {
         processImages({
           files: [record.originFileObj as File],
-          modeKey: "balance",
+          modeKey: compressionMode,
           outputFormat: targetOutputFormat,
           outputDir: targetDirMode === "custom" ? trimmedCustomDir : "",
           onTaskProgress: (index, progress) => {
@@ -493,12 +496,36 @@ const CompressionImageListView = () => {
       </div>
 
       <Flex vertical justify="space-around" className="detail-bottom-tools">
-        <Flex align="flex-start">
-          <span className="detail-bottom-tools-title">压缩模式：</span>
-          <Radio className="detail-bottom-tools-radio">自定义</Radio>
-          <Radio className="detail-bottom-tools-radio">缩小优先</Radio>
-          <Radio className="detail-bottom-tools-radio">均衡压缩</Radio>
-          <Radio className="detail-bottom-tools-radio">清晰优先</Radio>
+        <Flex align="flex-start" vertical>
+          <Flex align="flex-start">
+            <span className="detail-bottom-tools-title">压缩模式：</span>
+            <Radio.Group
+              value={compressionMode}
+              onChange={(e) => setCompressionMode(e.target.value)}
+            >
+              <Radio className="detail-bottom-tools-radio" value="low">
+                缩小优先
+              </Radio>
+              <Radio className="detail-bottom-tools-radio" value="balance">
+                均衡压缩
+              </Radio>
+              <Radio className="detail-bottom-tools-radio" value="high">
+                清晰优先
+              </Radio>
+            </Radio.Group>
+          </Flex>
+          <div
+            style={{
+              marginLeft: 90,
+              marginTop: 4,
+              color: "#666",
+              fontSize: 14,
+            }}
+          >
+            {compressionMode === "low" && "清晰度：40% 尺寸：100%"}
+            {compressionMode === "balance" && "清晰度：60% 尺寸：100%"}
+            {compressionMode === "high" && "清晰度：70% 尺寸：100%"}
+          </div>
         </Flex>
         <Flex align="start" style={{ gap: 12, flexWrap: "wrap" }}>
           <span className="detail-bottom-tools-title">输出格式：</span>
