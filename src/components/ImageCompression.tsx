@@ -58,6 +58,7 @@ const CompressionImageListView = () => {
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [compressionMode, setCompressionMode] =
     useState<CompressModeKey>("balance");
+  const [isBatchCompressing, setIsBatchCompressing] = useState(false);
   const [outputFormat, setOutputFormat] = useState<"origin" | "jpg">("origin");
   const [outputDirMode, setOutputDirMode] = useState<"origin" | "custom">(
     "custom"
@@ -286,6 +287,27 @@ const CompressionImageListView = () => {
     );
     setSelectedRowKeys([]);
     message.success("删除成功");
+  };
+
+  const handleBatchCompressSelected = async () => {
+    if (selectedRowKeys.length === 0 || isBatchCompressing) {
+      return;
+    }
+    setIsBatchCompressing(true);
+    try {
+      const selectedRecords = compressionImageList.filter((item) =>
+        selectedRowKeys.includes(item.uid)
+      );
+      for (const record of selectedRecords) {
+        await handleCompress(record);
+      }
+      message.success("批量压缩完成");
+    } catch (error) {
+      console.error("批量压缩失败:", error);
+      message.error("批量压缩过程中出现错误");
+    } finally {
+      setIsBatchCompressing(false);
+    }
   };
 
   // 表格列定义
@@ -572,6 +594,14 @@ const CompressionImageListView = () => {
               />
               <Button onClick={handleSelectCustomDir}>更改目录</Button>
               <Button onClick={handleOpenCustomDir}>打开文件夹</Button>
+              <Button
+                type="primary"
+                onClick={handleBatchCompressSelected}
+                disabled={selectedRowKeys.length === 0 || isBatchCompressing}
+                loading={isBatchCompressing}
+              >
+                一键压缩
+              </Button>
             </Flex>
           )}
         </Flex>
