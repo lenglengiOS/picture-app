@@ -3,7 +3,6 @@ import {
   compressBatchWithProgress,
   BatchCompressController,
 } from "./compressBatchWithProgress";
-import { saveCompressedResult } from "./saveCompressedResult";
 
 export interface ProcessImagesResult {
   controller: BatchCompressController;

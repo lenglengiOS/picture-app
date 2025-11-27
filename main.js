@@ -1,6 +1,7 @@
-const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const os = require("os");
 const { compressImage } = require("./src/utils/compress");
 
 try {
@@ -136,6 +137,22 @@ ipcMain.handle("save-file", async (_, { buffer, outPath }) => {
 
 ipcMain.handle("open-folder", async (_, folderPath) => {
   return shell.openPath(folderPath);
+});
+
+ipcMain.handle("choose-folder", async () => {
+  const result = await dialog.showOpenDialog({
+    properties: ["openDirectory", "createDirectory"],
+  });
+  if (result.canceled || result.filePaths.length === 0) {
+    return null;
+  }
+  return result.filePaths[0];
+});
+
+ipcMain.handle("get-desktop-path", async () => {
+  const homeDir = os.homedir();
+  const desktopPath = path.join(homeDir, "Desktop");
+  return desktopPath;
 });
 
 app.whenReady().then(createWindow);

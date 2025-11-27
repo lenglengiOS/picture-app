@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld("api", {
   saveFile: (buffer, outPath) =>
     ipcRenderer.invoke("save-file", { buffer, outPath }),
   openFolder: (folderPath) => ipcRenderer.invoke("open-folder", folderPath),
+  chooseFolder: () => ipcRenderer.invoke("choose-folder"),
+  getDesktopPath: () => ipcRenderer.invoke("get-desktop-path"),
 });

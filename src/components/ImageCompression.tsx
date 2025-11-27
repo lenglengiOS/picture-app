@@ -5,7 +5,7 @@ import {
   CompressionImageType,
   showDetailAtom,
 } from "@src/store/home";
-import { Flex, Table, Button, Tag, Radio } from "antd";
+import { Flex, Table, Button, Tag, Radio, Input } from "antd";
 import {
   BlockOutlined,
   MergeCellsOutlined,
@@ -26,6 +26,9 @@ import type { UploadProps, TableColumnsType } from "antd";
 import { message, Upload } from "antd";
 import "./ImageCompression.css";
 import { TableRowSelection } from "antd/es/table/interface";
+import { processImages } from "@src/utils/processImages";
+import type { CompressTask } from "@src/utils/compressSingleImageWithProgress";
+import { saveCompressedResult } from "@src/utils/saveCompressedResult";
 const { Dragger } = Upload;
 
 const ImageCompression = () => {
@@ -44,12 +47,87 @@ const ImageCompression = () => {
   return <CompressionImageListView />;
 };
 
+const FOLDER_NAME = "阳光图片转换器";
+
 const CompressionImageListView = () => {
   const [compressionImageList, setCompressionImageList] = useAtom(
     compressionImageListAtom
   );
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [outputFormat, setOutputFormat] = useState<"origin" | "jpg">("origin");
+  const [outputDirMode, setOutputDirMode] = useState<"origin" | "custom">(
+    "custom"
+  );
+  const [customOutputDir, setCustomOutputDir] = useState<string>("");
+  const defaultOutputDirRef = useRef<string>("");
+
+  // 初始化时获取桌面路径
+  useEffect(() => {
+    const initDesktopPath = async () => {
+      try {
+        if (typeof window !== "undefined" && window.api?.getDesktopPath) {
+          const desktopPath = await window.api.getDesktopPath();
+          const defaultPath = joinPathSegments(desktopPath, FOLDER_NAME);
+          defaultOutputDirRef.current = defaultPath;
+          setCustomOutputDir(defaultPath);
+        } else {
+          // 降级处理：如果 API 不可用，使用文件夹名
+          defaultOutputDirRef.current = FOLDER_NAME;
+          setCustomOutputDir(FOLDER_NAME);
+        }
+      } catch (error) {
+        console.error("获取桌面路径失败:", error);
+        defaultOutputDirRef.current = FOLDER_NAME;
+        setCustomOutputDir(FOLDER_NAME);
+      }
+    };
+    initDesktopPath();
+  }, []);
+
+  // 获取默认输出目录（如果 customOutputDir 为空则使用默认值）
+  const getDefaultOutputDir = () => {
+    return customOutputDir.trim() || defaultOutputDirRef.current || FOLDER_NAME;
+  };
+
+  const handleSelectCustomDir = async () => {
+    if (typeof window === "undefined" || !window.api?.chooseFolder) {
+      message.warning("当前环境不支持目录选择，请手动输入路径");
+      return;
+    }
+    try {
+      const folder = await window.api.chooseFolder();
+      if (folder) {
+        setCustomOutputDir(folder);
+        setOutputDirMode("custom");
+      }
+    } catch (err) {
+      console.error("选择目录失败:", err);
+      message.error("选择目录失败，请重试");
+    }
+  };
+
+  const handleOpenCustomDir = async () => {
+    if (typeof window === "undefined" || !window.api?.openFolder) {
+      message.warning("当前环境不支持打开文件夹");
+      return;
+    }
+    if (outputDirMode !== "custom") {
+      message.info("请先切换到自定义输出目录");
+      return;
+    }
+    const targetPath = getDefaultOutputDir();
+    if (!targetPath) {
+      message.error("请先设置自定义输出目录");
+      return;
+    }
+    try {
+      await window.api.openFolder(targetPath);
+    } catch (err) {
+      console.error("打开目录失败:", err);
+      message.error("打开目录失败，请确认路径是否存在");
+    }
+  };
 
   // 初始化压缩状态
   useEffect(() => {
@@ -84,6 +162,26 @@ const CompressionImageListView = () => {
 
   // 压缩图片
   const handleCompress = async (record: CompressionImageType) => {
+    if (!record.originFileObj) {
+      message.error(`${record.name} 缺少原始文件，无法压缩`);
+      return;
+    }
+    const targetDirMode = outputDirMode;
+    const targetOutputFormat = outputFormat;
+    const trimmedCustomDir =
+      targetDirMode === "custom" ? getDefaultOutputDir() : "";
+
+    if (targetDirMode === "custom" && !trimmedCustomDir) {
+      message.error("请先填写自定义输出目录");
+      return;
+    }
+    if (
+      targetDirMode === "origin" &&
+      !(record.originFileObj as unknown as { path?: string })?.path
+    ) {
+      message.error("无法获取原文件路径，请改用自定义输出目录");
+      return;
+    }
     try {
       // 更新状态为压缩中
       setCompressionImageList((prev) =>
@@ -94,29 +192,65 @@ const CompressionImageListView = () => {
         )
       );
 
-      // 使用 Canvas API 进行图片压缩
-      const compressedData = await compressImageWithCanvas(
-        record.originFileObj,
-        0.8, // 质量参数，可以根据需要调整
-        1920 // 最大宽度，可以根据需要调整
-      );
+      let finalSavedPath = "";
+      await new Promise<void>((resolve, reject) => {
+        processImages({
+          files: [record.originFileObj as File],
+          modeKey: "balance",
+          outputFormat: targetOutputFormat,
+          outputDir: targetDirMode === "custom" ? trimmedCustomDir : "",
+          onTaskProgress: (index, progress) => {
+            setCompressionImageList((prev) =>
+              prev.map((item) =>
+                item.uid === record.uid
+                  ? { ...item, compressionProgress: progress }
+                  : item
+              )
+            );
+          },
+          onTaskComplete: async (_, file) => {
+            if (!file) {
+              reject(new Error("压缩结果为空"));
+              return;
+            }
+            try {
+              const dimensions = await getImageDimensions(file);
+              const savedPath = await saveCompressedFile(
+                record,
+                file,
+                targetDirMode,
+                trimmedCustomDir,
+                targetOutputFormat
+              );
+              finalSavedPath = savedPath;
+              setCompressionImageList((prev) =>
+                prev.map((item) =>
+                  item.uid === record.uid
+                    ? {
+                        ...item,
+                        compressedSize: file.size,
+                        compressedWidth: dimensions.width,
+                        compressedHeight: dimensions.height,
+                        compressionStatus: "compressed" as const,
+                        compressionProgress: 100,
+                        compressedFile: file,
+                        savedPath,
+                      }
+                    : item
+                )
+              );
+              resolve();
+            } catch (dimensionErr) {
+              reject(dimensionErr);
+            }
+          },
+        });
+      });
 
-      // 更新压缩后的信息
-      setCompressionImageList((prev) =>
-        prev.map((item) =>
-          item.uid === record.uid
-            ? {
-                ...item,
-                compressedSize: compressedData.size,
-                compressedWidth: compressedData.width,
-                compressedHeight: compressedData.height,
-                compressionStatus: "compressed" as const,
-              }
-            : item
-        )
-      );
-
-      message.success(`${record.name} 压缩完成`);
+      const successTips = finalSavedPath
+        ? `${record.name} 压缩完成，已保存到 ${finalSavedPath}`
+        : `${record.name} 压缩完成`;
+      message.success(successTips);
     } catch (error) {
       console.error("压缩失败:", error);
       message.error(`${record.name} 压缩失败`);
@@ -129,63 +263,6 @@ const CompressionImageListView = () => {
         )
       );
     }
-  };
-
-  // 使用 Canvas 压缩图片
-  const compressImageWithCanvas = (
-    file: File,
-    quality: number = 0.8,
-    maxWidth: number = 1920
-  ): Promise<{ size: number; width: number; height: number; blob: Blob }> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
-
-          // 如果宽度超过最大宽度，按比例缩放
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-
-          canvas.width = width;
-          canvas.height = height;
-
-          const ctx = canvas.getContext("2d");
-          if (!ctx) {
-            reject(new Error("无法创建 Canvas 上下文"));
-            return;
-          }
-
-          ctx.drawImage(img, 0, 0, width, height);
-
-          canvas.toBlob(
-            (blob) => {
-              if (!blob) {
-                reject(new Error("压缩失败"));
-                return;
-              }
-              resolve({
-                size: blob.size,
-                width,
-                height,
-                blob,
-              });
-            },
-            file.type || "image/jpeg",
-            quality
-          );
-        };
-        img.onerror = () => reject(new Error("图片加载失败"));
-        img.src = e.target?.result as string;
-      };
-      reader.onerror = () => reject(new Error("文件读取失败"));
-      reader.readAsDataURL(file);
-    });
   };
 
   // 删除图片
@@ -423,15 +500,53 @@ const CompressionImageListView = () => {
           <Radio className="detail-bottom-tools-radio">均衡压缩</Radio>
           <Radio className="detail-bottom-tools-radio">清晰优先</Radio>
         </Flex>
-        <Flex align="start">
+        <Flex align="start" style={{ gap: 12, flexWrap: "wrap" }}>
           <span className="detail-bottom-tools-title">输出格式：</span>
-          <Radio className="detail-bottom-tools-radio">原格式</Radio>
-          <Radio className="detail-bottom-tools-radio">转为JPG</Radio>
+          <Radio.Group
+            value={outputFormat}
+            onChange={(e) => setOutputFormat(e.target.value)}
+          >
+            <Radio className="detail-bottom-tools-radio" value="origin">
+              原格式
+            </Radio>
+            <Radio className="detail-bottom-tools-radio" value="jpg">
+              转为JPG
+            </Radio>
+          </Radio.Group>
         </Flex>
-        <Flex align="start">
+        <Flex
+          align="center"
+          style={{ gap: 12, flexWrap: "wrap", width: "100%" }}
+        >
           <span className="detail-bottom-tools-title">输出目录：</span>
-          <Radio className="detail-bottom-tools-radio">原文件夹</Radio>
-          <Radio className="detail-bottom-tools-radio">自定义</Radio>
+          <Radio.Group
+            value={outputDirMode}
+            onChange={(e) => setOutputDirMode(e.target.value)}
+          >
+            <Radio className="detail-bottom-tools-radio" value="origin">
+              原文件夹
+            </Radio>
+            <Radio className="detail-bottom-tools-radio" value="custom">
+              自定义
+            </Radio>
+          </Radio.Group>
+          {outputDirMode === "custom" && (
+            <Flex
+              align="center"
+              style={{ gap: 8, flexWrap: "wrap", flex: 1, minWidth: 260 }}
+            >
+              <Input
+                disabled
+                style={{ minWidth: 260, flex: 1 }}
+                value={customOutputDir}
+                onChange={(e) => setCustomOutputDir(e.target.value)}
+                placeholder={defaultOutputDirRef.current || FOLDER_NAME}
+                allowClear
+              />
+              <Button onClick={handleSelectCustomDir}>更改目录</Button>
+              <Button onClick={handleOpenCustomDir}>打开文件夹</Button>
+            </Flex>
+          )}
         </Flex>
       </Flex>
     </div>
@@ -597,5 +712,63 @@ const getImageDimensions = (
     img.src = url;
   });
 };
+
+const saveCompressedFile = async (
+  record: CompressionImageType,
+  file: File,
+  dirMode: "origin" | "custom",
+  customDir: string,
+  format: "origin" | "jpg"
+) => {
+  // 获取默认输出目录（如果 customDir 为空）
+  const resolvedCustomDir = customDir
+    ? customDir
+    : await (async () => {
+        try {
+          if (typeof window !== "undefined" && window.api?.getDesktopPath) {
+            const desktopPath = await window.api.getDesktopPath();
+            return joinPathSegments(desktopPath, FOLDER_NAME);
+          }
+        } catch (error) {
+          console.error("获取桌面路径失败:", error);
+        }
+        return FOLDER_NAME;
+      })();
+  const targetDir =
+    dirMode === "custom"
+      ? resolvedCustomDir
+      : getOriginDirectory(record.originFileObj);
+  const task: CompressTask = {
+    file: record.originFileObj,
+    progress: 100,
+    compressed: file,
+  };
+
+  const savedPath = await saveCompressedResult(task, targetDir, format);
+  if (!savedPath) {
+    throw new Error("保存压缩文件失败");
+  }
+  return savedPath;
+};
+
+const getOriginDirectory = (file: File) => {
+  const filePath = (file as unknown as { path?: string })?.path;
+  if (!filePath) {
+    throw new Error("无法获取原文件目录");
+  }
+  const normalizedPath = filePath.replace(/\\/g, "/");
+  const lastSlashIndex = normalizedPath.lastIndexOf("/");
+  if (lastSlashIndex === -1) {
+    throw new Error("无法解析原文件目录");
+  }
+  return normalizedPath.slice(0, lastSlashIndex);
+};
+
+function joinPathSegments(base: string, child: string) {
+  if (!base) return child;
+  const normalizedBase = base.replace(/[\\/]+$/, "");
+  const separator = normalizedBase.includes("\\") ? "\\" : "/";
+  return `${normalizedBase}${separator}${child}`;
+}
 
 export default ImageCompression;

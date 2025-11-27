@@ -20,4 +20,7 @@ export type CompressionImageType = {
   compressedWidth?: number;
   compressedHeight?: number;
   compressionStatus?: "pending" | "compressed" | "compressing";
+  compressionProgress?: number;
+  compressedFile?: File;
+  savedPath?: string;
 };
