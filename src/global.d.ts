@@ -17,7 +17,7 @@ declare global {
     //   >;
     // };
     api: {
-      saveFile: (buffer: ArrayBuffer, outPath: string) => Promise<boolean>;
+      saveFile: (buffer: ArrayBuffer, outPath: string) => Promise<string>;
       openFolder: (folderPath: string) => Promise<void>;
       chooseFolder: () => Promise<string | null>;
       getDesktopPath: () => Promise<string>;

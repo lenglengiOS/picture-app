@@ -744,7 +744,16 @@ const saveCompressedFile = async (
     compressed: file,
   };
 
-  const savedPath = await saveCompressedResult(task, targetDir, format);
+  // 获取原文件路径（如果存在）
+  const originalFilePath =
+    (record.originFileObj as unknown as { path?: string })?.path || undefined;
+
+  const savedPath = await saveCompressedResult(
+    task,
+    targetDir,
+    format,
+    originalFilePath
+  );
   if (!savedPath) {
     throw new Error("保存压缩文件失败");
   }

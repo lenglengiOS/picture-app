@@ -128,12 +128,90 @@ function createWindow() {
 // }
 
 ipcMain.handle("save-file", async (_, { buffer, outPath }) => {
-  await fs.promises.mkdir(require("path").dirname(outPath), {
-    recursive: true,
-  });
-  await fs.promises.writeFile(outPath, Buffer.from(buffer));
-  return true;
+  try {
+    await fs.promises.mkdir(path.dirname(outPath), {
+      recursive: true,
+    });
+
+    // 如果文件已存在且可能是原文件，生成唯一文件名
+    let finalPath = outPath;
+    if (await fileExists(outPath)) {
+      finalPath = await getUniqueFilePath(outPath);
+    }
+
+    await fs.promises.writeFile(finalPath, Buffer.from(buffer));
+    return finalPath;
+  } catch (error) {
+    // 如果写入失败（可能是权限问题），尝试生成唯一文件名
+    if (
+      error.code === "EACCES" ||
+      error.code === "EPERM" ||
+      error.code === "EBUSY"
+    ) {
+      try {
+        // 如果是因为尝试覆盖原文件导致的权限错误，生成唯一文件名
+        const uniquePath = await getUniqueFilePath(outPath);
+        if (uniquePath !== outPath) {
+          await fs.promises.writeFile(uniquePath, Buffer.from(buffer));
+          return uniquePath;
+        }
+      } catch (retryError) {
+        // 如果生成唯一文件名后仍然失败，抛出更友好的错误信息
+        throw new Error(
+          `无法保存文件到 "${path.dirname(outPath)}"：${
+            error.message
+          }。请检查文件权限或选择其他输出目录。`
+        );
+      }
+    }
+    // 其他错误直接抛出
+    throw error;
+  }
 });
+
+// 检查文件是否存在
+async function fileExists(filePath) {
+  try {
+    await fs.promises.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// 获取唯一的文件路径（如果文件已存在，添加数字后缀）
+async function getUniqueFilePath(filePath) {
+  const dir = path.dirname(filePath);
+  const ext = path.extname(filePath);
+  const baseName = path.basename(filePath, ext);
+  let counter = 1;
+  let newPath = filePath;
+
+  // 如果原文件名不包含 _compressed，先尝试添加它
+  if (!baseName.includes("_compressed")) {
+    newPath = path.join(dir, `${baseName}_compressed${ext}`);
+    if (!(await fileExists(newPath))) {
+      return newPath;
+    }
+  }
+
+  // 如果 _compressed 版本也存在，添加数字后缀
+  while (await fileExists(newPath)) {
+    const nameWithoutCompressed = baseName.replace(/_compressed$/, "");
+    newPath = path.join(
+      dir,
+      `${nameWithoutCompressed}_compressed_${counter}${ext}`
+    );
+    counter++;
+
+    // 防止无限循环
+    if (counter > 1000) {
+      throw new Error("无法生成唯一的文件名");
+    }
+  }
+
+  return newPath;
+}
 
 ipcMain.handle("open-folder", async (_, folderPath) => {
   return shell.openPath(folderPath);
