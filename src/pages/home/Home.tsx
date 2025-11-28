@@ -33,38 +33,6 @@ const Home = () => {
           />
         </div>
       </div>
-
-      {/* 图片转换 */}
-      <div className="type-content">
-        {/* 标题 */}
-        <div className="title-view">
-          <div className="title-line" />
-          <span className="title-text">图片转换</span>
-        </div>
-
-        {/* 卡片内容 */}
-        <div className="card">
-          <Item title="JPG压缩" icon={require("@src/assets/jpg.png")} />
-          <Item title="PNG压缩" icon={require("@src/assets/jpg.png")} />
-          <Item title="GIF压缩" icon={require("@src/assets/jpg.png")} />
-        </div>
-      </div>
-
-      {/* 图片处理 */}
-      <div className="type-content">
-        {/* 标题 */}
-        <div className="title-view">
-          <div className="title-line" />
-          <span className="title-text">图片处理</span>
-        </div>
-
-        {/* 卡片内容 */}
-        <div className="card">
-          <Item title="JPG压缩" icon={require("@src/assets/jpg.png")} />
-          <Item title="PNG压缩" icon={require("@src/assets/jpg.png")} />
-          <Item title="GIF压缩" icon={require("@src/assets/jpg.png")} />
-        </div>
-      </div>
     </div>
   );
 };
