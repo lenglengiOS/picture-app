@@ -31,10 +31,12 @@
           "target": "dmg",
           "arch": [
             "x64",
-            "arm64"
+            "arm64",
+            "universal"
           ]
         }
       ],
+      "artifactName": "${productName}-${version}-${arch}.dmg",
       "identity": null,
       "extendInfo": {
         "CFBundleDisplayName": "阳光图片转换器"
