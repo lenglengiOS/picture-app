@@ -61,14 +61,6 @@ jobs:
             mv dist/*.exe dist/windows/${APP_NAME}-windows-${VERSION}.exe || true
           fi
 
-      - name: Generate changelog
-        id: changelog
-        uses: mikeal/auto-changelog-action@v2
-        with:
-          tag: v${{ github.run_number }}
-          output: CHANGELOG.md
-          template: simple
-
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
