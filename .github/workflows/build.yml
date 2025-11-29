@@ -44,22 +44,19 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" == "macos-latest" ]; then
             mkdir -p dist/mac
-            npx electron-builder --mac --x64 --arm64 --universal --config.extraMetadata.version=${VERSION} --dir dist/mac
 
-            for dmg in dist/mac/*.dmg; do
-              if [[ $dmg == *"arm64"* ]]; then
-                mv "$dmg" dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
-              elif [[ $dmg == *"x64"* ]]; then
-                mv "$dmg" dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
-              else
-                mv "$dmg" dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
-              fi
-            done
-          else
-            npm run dist
-            mkdir -p dist/windows
-            mv dist/*.exe dist/windows/${APP_NAME}-windows-${VERSION}.exe || true
-          fi
+            echo "Build x64"
+            npx electron-builder --mac --x64 -c.extraMetadata.version=${VERSION}
+            mv dist/*.dmg dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
+
+            echo "Build arm64"
+            npx electron-builder --mac --arm64 -c.extraMetadata.version=${VERSION}
+            mv dist/*.dmg dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
+
+            echo "Build universal"
+            npx electron-builder --mac --universal -c.extraMetadata.version=${VERSION}
+            mv dist/*.dmg dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
+            fi
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
