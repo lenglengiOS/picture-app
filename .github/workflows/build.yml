@@ -48,18 +48,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist/mac
-
-          echo "Build macOS x64..."
-          npx electron-builder --mac --x64 --publish=never -c.extraMetadata.version=${VERSION}
-          mv -- dist/*x64*.dmg dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
-
-          echo "Build macOS arm64..."
-          npx electron-builder --mac --arm64 --publish=never -c.extraMetadata.version=${VERSION}
-          mv -- dist/*arm64*.dmg dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
-
-          echo "Build macOS universal..."
-          npx electron-builder --mac --universal --publish=never -c.extraMetadata.version=${VERSION}
-          mv -- dist/*universal*.dmg dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
+          npx electron-builder --mac --x64 --arm64 --universal --publish=never -c.extraMetadata.version=${VERSION}
 
       #########################################
       # Windows 构建
