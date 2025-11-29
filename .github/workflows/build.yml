@@ -50,15 +50,15 @@ jobs:
           mkdir -p dist/mac
 
           echo "Build macOS x64..."
-          npx electron-builder --mac --x64 -c.extraMetadata.version=${VERSION}
+          npx electron-builder --mac --x64 --publish=never -c.extraMetadata.version=${VERSION}
           mv dist/*.dmg dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
 
           echo "Build macOS arm64..."
-          npx electron-builder --mac --arm64 -c.extraMetadata.version=${VERSION}
+          npx electron-builder --mac --arm64 --publish=never -c.extraMetadata.version=${VERSION}
           mv dist/*.dmg dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
 
           echo "Build macOS universal..."
-          npx electron-builder --mac --universal -c.extraMetadata.version=${VERSION}
+          npx electron-builder --mac --universal --publish=never -c.extraMetadata.version=${VERSION}
           mv dist/*.dmg dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
 
       #########################################
