@@ -14,7 +14,7 @@
     "appId": "com.sunshine.app",
     "productName": "SunshineImageConverter",
     "directories": {
-      "output": "dist"
+      "output": "dist/mac"
     },
     "files": [
       "src/**/*",
