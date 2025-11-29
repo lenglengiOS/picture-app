@@ -1,0 +1,87 @@
+name: Electron Build & Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        node: [20.x]
+
+    env:
+      APP_NAME: SunshineImageConverter
+      VERSION: 1.0.${{ github.run_number }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Cache node modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build renderer process
+        run: npm run build:renderer
+
+      - name: Build Electron App (macOS & Windows)
+        run: |
+          if [ "${{ matrix.os }}" == "macos-latest" ]; then
+            mkdir -p dist/mac
+            npx electron-builder --mac --x64 --arm64 --universal --config.extraMetadata.version=${VERSION} --dir dist/mac
+
+            for dmg in dist/mac/*.dmg; do
+              if [[ $dmg == *"arm64"* ]]; then
+                mv "$dmg" dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
+              elif [[ $dmg == *"x64"* ]]; then
+                mv "$dmg" dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
+              else
+                mv "$dmg" dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
+              fi
+            done
+          else
+            npm run dist
+            mkdir -p dist/windows
+            mv dist/*.exe dist/windows/${APP_NAME}-windows-${VERSION}.exe || true
+          fi
+
+      - name: Generate changelog
+        id: changelog
+        uses: mikeal/auto-changelog-action@v2
+        with:
+          tag: v${{ github.run_number }}
+          output: CHANGELOG.md
+          template: simple
+
+      - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main'
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: |
+            dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
+            dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
+            dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
+            dist/windows/${APP_NAME}-windows-${VERSION}.exe
+          tag: v${{ github.run_number }}
+          name: Release v${{ github.run_number }}
+          body: |
+            ## Changelog
+            $(cat CHANGELOG.md)
+          draft: false
+          prerelease: false
