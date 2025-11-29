@@ -48,10 +48,10 @@ export default function Toolbar() {
           阳光图片转换器
         </Button>
       </ToolbarLeft>
-      <ToolbarRight>
+      {/* <ToolbarRight>
         <Button>搜索</Button>
         <Button>设置</Button>
-      </ToolbarRight>
+      </ToolbarRight> */}
     </ToolbarContainer>
   );
 }
