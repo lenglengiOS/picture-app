@@ -40,33 +40,50 @@ jobs:
       - name: Build renderer process
         run: npm run build:renderer
 
-      - name: Build Electron App (macOS & Windows)
+      #########################################
+      # macOS 构建
+      #########################################
+      - name: Build macOS dmg (x64 / arm64 / universal)
+        if: runner.os == 'macOS'
+        shell: bash
         run: |
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            mkdir -p dist/mac
+          mkdir -p dist/mac
 
-            echo "Build x64"
-            npx electron-builder --mac --x64 -c.extraMetadata.version=${VERSION}
-            mv dist/*.dmg dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
+          echo "Build macOS x64..."
+          npx electron-builder --mac --x64 -c.extraMetadata.version=${VERSION}
+          mv dist/*.dmg dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
 
-            echo "Build arm64"
-            npx electron-builder --mac --arm64 -c.extraMetadata.version=${VERSION}
-            mv dist/*.dmg dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
+          echo "Build macOS arm64..."
+          npx electron-builder --mac --arm64 -c.extraMetadata.version=${VERSION}
+          mv dist/*.dmg dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
 
-            echo "Build universal"
-            npx electron-builder --mac --universal -c.extraMetadata.version=${VERSION}
-            mv dist/*.dmg dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
-            fi
+          echo "Build macOS universal..."
+          npx electron-builder --mac --universal -c.extraMetadata.version=${VERSION}
+          mv dist/*.dmg dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
 
+      #########################################
+      # Windows 构建
+      #########################################
+      - name: Build Windows exe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npm run dist
+          New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
+          Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
+
+      #########################################
+      # 发布 Release
+      #########################################
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
-            dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
-            dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
-            dist/windows/${APP_NAME}-windows-${VERSION}.exe
+            dist/mac/${{ env.APP_NAME }}-mac-x64-${{ env.VERSION }}.dmg
+            dist/mac/${{ env.APP_NAME }}-mac-arm64-${{ env.VERSION }}.dmg
+            dist/mac/${{ env.APP_NAME }}-mac-universal-${{ env.VERSION }}.dmg
+            dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
           tag: v${{ github.run_number }}
           name: Release v${{ github.run_number }}
           body: |
