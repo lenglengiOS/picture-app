@@ -2,7 +2,7 @@ const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("path");
 const fs = require("fs");
 const os = require("os");
-const { compressImage } = require("./src/utils/compress");
+const { compressImage } = require("./utils/compress");
 
 try {
   require("electron-reloader")(module);
@@ -22,7 +22,7 @@ function createWindow() {
     icon: path.join(__dirname, "build/icon.png"),
   });
 
-  win.loadFile(path.join(__dirname, "src/renderer/index.html"));
+  win.loadFile(path.join(__dirname, "renderer/index.html"));
 }
 
 // IPC: 选择图片

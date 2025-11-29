@@ -1,7 +1,7 @@
 {
   "name": "picture-app",
   "version": "1.0.0",
-  "main": "main.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "build:renderer": "webpack --config webpack.renderer.config.js",
@@ -17,10 +17,8 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
       "src/**/*",
-      "node_modules/**/*",
-      "package.json"
+      "!dist"
     ],
     "asar": true,
     "asarUnpack": [
