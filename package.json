@@ -17,10 +17,14 @@
       "output": "dist"
     },
     "files": [
-      "!node_modules",
-      "!dist",
       "main.js",
-      "src/**/*"
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/sharp/**"
     ],
     "mac": {
       "icon": "build/icon.icns",
