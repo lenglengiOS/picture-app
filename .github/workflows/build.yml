@@ -55,7 +55,6 @@ jobs:
         run: |
           mkdir -p dist/mac
           npx electron-builder --mac --x64 --arm64 --publish=never
-          mv dist/*.dmg dist/mac/
 
       #########################################
       # Windows 构建
