@@ -35,53 +35,55 @@ jobs:
             ${{ runner.os }}-node-
 
       - name: Install dependencies
-        run: npm install
+        run: npm install --legacy-peer-deps
 
       - name: Build renderer process
         run: npm run build:renderer
 
-      - name: Build Electron App (macOS & Windows)
+      #########################################
+      # 写入版本号到 package.json
+      #########################################
+      - name: Update version in package.json
         run: |
-          if [ "${{ matrix.os }}" == "macos-latest" ]; then
-            mkdir -p dist/mac
-            npx electron-builder --mac --x64 --arm64 --universal --config.extraMetadata.version=${VERSION} --dir dist/mac
+          node -e "let pkg=require('./package.json'); pkg.version='${{ env.VERSION }}'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg,null,2));"
 
-            for dmg in dist/mac/*.dmg; do
-              if [[ $dmg == *"arm64"* ]]; then
-                mv "$dmg" dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
-              elif [[ $dmg == *"x64"* ]]; then
-                mv "$dmg" dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
-              else
-                mv "$dmg" dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
-              fi
-            done
-          else
-            npm run dist
-            mkdir -p dist/windows
-            mv dist/*.exe dist/windows/${APP_NAME}-windows-${VERSION}.exe || true
-          fi
+      #########################################
+      # macOS 构建
+      #########################################
+      - name: Build macOS dmg (x64 / arm64)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p dist/mac
+          npx electron-builder --mac --x64 --arm64 --publish=never
 
-      - name: Generate changelog
-        id: changelog
-        uses: mikeal/auto-changelog-action@v2
-        with:
-          tag: v${{ github.run_number }}
-          output: CHANGELOG.md
-          template: simple
+      #########################################
+      # Windows 构建
+      #########################################
+      - name: Build Windows exe
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          npx electron-builder --win --x64 --publish=never
+          New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
+          Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
 
+      #########################################
+      # 发布 Release
+      #########################################
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
-            dist/mac/${APP_NAME}-mac-x64-${VERSION}.dmg
-            dist/mac/${APP_NAME}-mac-arm64-${VERSION}.dmg
-            dist/mac/${APP_NAME}-mac-universal-${VERSION}.dmg
-            dist/windows/${APP_NAME}-windows-${VERSION}.exe
-          tag: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
+            dist/mac/*${{ env.VERSION }}*.dmg
+            dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
+          tag: v${{ env.VERSION }}-${{ github.run_id }}
+          name: Build v${{ env.VERSION }} (${{ github.run_id }})
           body: |
             ## Changelog
             $(cat CHANGELOG.md)
           draft: false
           prerelease: false
+          allowUpdates: true # 允许更新已存在的Release
+          update: true # 如果Release存在，则更新它
