@@ -85,3 +85,5 @@ jobs:
             $(cat CHANGELOG.md)
           draft: false
           prerelease: false
+          allowUpdates: true # 允许更新已存在的Release
+          update: true # 如果Release存在，则更新它
