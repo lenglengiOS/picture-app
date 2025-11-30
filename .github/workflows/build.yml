@@ -68,7 +68,7 @@ jobs:
           Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
 
       #########################################
-      # 发布 Release
+      # 发布  Release
       #########################################
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
