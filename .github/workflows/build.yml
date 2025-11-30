@@ -41,14 +41,21 @@ jobs:
         run: npm run build:renderer
 
       #########################################
+      # 写入版本号到 package.json
+      #########################################
+      - name: Update version in package.json
+        run: |
+          node -e "let pkg=require('./package.json'); pkg.version='${{ env.VERSION }}'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg,null,2));"
+
+      #########################################
       # macOS 构建
       #########################################
       - name: Build macOS dmg (x64 / arm64)
         if: runner.os == 'macOS'
-        shell: bash
         run: |
           mkdir -p dist/mac
-          npx electron-builder --mac --x64 --arm64 --publish=never -c.extraMetadata.version=${VERSION}
+          npx electron-builder --mac --x64 --arm64 --publish=never
+          mv dist/*.dmg dist/mac/
 
       #########################################
       # Windows 构建
@@ -57,7 +64,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          npx electron-builder --win --x64 --publish=never -c.extraMetadata.version=${env:VERSION}
+          npx electron-builder --win --x64 --publish=never
           New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
           Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
 
@@ -70,8 +77,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
-            dist/mac/${{ env.APP_NAME }}-mac-x64-${{ env.VERSION }}.dmg
-            dist/mac/${{ env.APP_NAME }}-mac-arm64-${{ env.VERSION }}.dmg
+            dist/mac/*${{ env.VERSION }}*.dmg
             dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
           tag: v${{ github.run_number }}
           name: Release v${{ github.run_number }}
