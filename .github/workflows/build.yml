@@ -1,4 +1,4 @@
-name: Electron Build & Release
+name: Electron Build Only (No Release)
 
 on:
   push:
@@ -18,43 +18,30 @@ jobs:
       VERSION: 1.0.${{ github.run_number }}
 
     steps:
-      - name: Checkout repository
+      - name: Checkout source
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      - name: Build renderer process
+      - name: Build renderer
         run: npm run build:renderer
-
-      #########################################
-      # 写入版本号到 package.json
-      #########################################
-      - name: Update version in package.json
-        run: |
-          node -e "let pkg=require('./package.json'); pkg.version='${{ env.VERSION }}'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg,null,2));"
 
       #########################################
       # macOS 构建
       #########################################
-      - name: Build macOS dmg (x64 / arm64)
+      - name: Build macOS dmg
         if: runner.os == 'macOS'
         run: |
-          mkdir -p dist/mac
-          npx electron-builder --mac --x64 --arm64 --publish=never
+          npx electron-builder \
+            --mac --x64 --arm64 \
+            --publish=never \
+            -c.extraMetadata.version=${VERSION}
 
       #########################################
       # Windows 构建
@@ -63,25 +50,18 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          npx electron-builder --win --x64 --publish=never
-          New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
-          Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
+          npx electron-builder `
+            --win --x64 `
+            --publish=never `
+            -c.extraMetadata.version=${env:VERSION}
 
       #########################################
-      # 发布 Release
+      # 上传构建产物（无需 Release）
       #########################################
-      - name: Create GitHub Release
-        if: github.ref == 'refs/heads/main'
-        uses: ncipollo/release-action@v1
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: |
-            dist/mac/*${{ env.VERSION }}*.dmg
-            dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
-          tag: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
-          body: |
-            ## Changelog
-            $(cat CHANGELOG.md)
-          draft: false
-          prerelease: false
+          name: ${{ runner.os }}-build-${{ env.VERSION }}
+          path: |
+            dist/**/*.dmg
+            dist/**/*.exe
