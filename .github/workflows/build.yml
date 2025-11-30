@@ -68,6 +68,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: ncipollo/release-action@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
             dist/mac/${{ env.APP_NAME }}-mac-x64-${{ env.VERSION }}.dmg
             dist/mac/${{ env.APP_NAME }}-mac-arm64-${{ env.VERSION }}.dmg
