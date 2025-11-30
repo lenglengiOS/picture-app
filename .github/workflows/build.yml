@@ -51,7 +51,9 @@ jobs:
       # 重建 native 模块 (sharp 等) 适配 Electron
       #########################################
       - name: Rebuild native modules for Electron
-        run: npx electron-builder install-app-deps
+        run: |
+          npx electron-builder install-app-deps
+          npx electron-rebuild -f -w sharp
 
       #########################################
       # macOS 构建
@@ -69,6 +71,8 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
+          npx electron-builder install-app-deps
+          npx electron-rebuild -f -w sharp
           npx electron-builder --win --x64 --publish=never
           New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
           Move-Item dist/*Setup*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
