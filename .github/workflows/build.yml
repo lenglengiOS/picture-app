@@ -78,8 +78,8 @@ jobs:
           artifacts: |
             dist/mac/*${{ env.VERSION }}*.dmg
             dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
-          tag: v${{ github.run_number }}
-          name: Release v${{ github.run_number }}
+          tag: v${{ env.VERSION }}-${{ github.run_id }}
+          name: Build v${{ env.VERSION }} (${{ github.run_id }})
           body: |
             ## Changelog
             $(cat CHANGELOG.md)
