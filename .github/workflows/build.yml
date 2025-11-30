@@ -48,6 +48,12 @@ jobs:
           node -e "let pkg=require('./package.json'); pkg.version='${{ env.VERSION }}'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg,null,2));"
 
       #########################################
+      # 重建 native 模块 (sharp 等) 适配 Electron
+      #########################################
+      - name: Rebuild native modules for Electron
+        run: npx electron-builder install-app-deps
+
+      #########################################
       # macOS 构建
       #########################################
       - name: Build macOS dmg (x64 / arm64)
@@ -65,10 +71,10 @@ jobs:
         run: |
           npx electron-builder --win --x64 --publish=never
           New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
-          Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
+          Move-Item dist/*Setup*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
 
       #########################################
-      # 发布  Release
+      # 发布 Release
       #########################################
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main'
@@ -85,5 +91,5 @@ jobs:
             $(cat CHANGELOG.md)
           draft: false
           prerelease: false
-          allowUpdates: true # 允许更新已存在的Release
-          update: true # 如果Release存在，则更新它
+          allowUpdates: true
+          update: true
