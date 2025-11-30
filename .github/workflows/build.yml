@@ -43,12 +43,12 @@ jobs:
       #########################################
       # macOS 构建
       #########################################
-      - name: Build macOS dmg (x64 / arm64 / universal)
+      - name: Build macOS dmg (x64 / arm64)
         if: runner.os == 'macOS'
         shell: bash
         run: |
           mkdir -p dist/mac
-          npx electron-builder --mac --x64 --arm64 --universal --publish=never -c.extraMetadata.version=${VERSION}
+          npx electron-builder --mac --x64 --arm64 --publish=never -c.extraMetadata.version=${VERSION}
 
       #########################################
       # Windows 构建
@@ -72,7 +72,6 @@ jobs:
           artifacts: |
             dist/mac/${{ env.APP_NAME }}-mac-x64-${{ env.VERSION }}.dmg
             dist/mac/${{ env.APP_NAME }}-mac-arm64-${{ env.VERSION }}.dmg
-            dist/mac/${{ env.APP_NAME }}-mac-universal-${{ env.VERSION }}.dmg
             dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
           tag: v${{ github.run_number }}
           name: Release v${{ github.run_number }}
