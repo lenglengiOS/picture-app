@@ -16,6 +16,9 @@ jobs:
     env:
       APP_NAME: SunshineImageConverter
       VERSION: 1.0.${{ github.run_number }}
+      # 新增环境变量确保正确的平台架构
+      npm_config_arch: x64
+      npm_config_platform: ${{ matrix.os == 'macos-latest' && 'darwin' || 'win32' }}
 
     steps:
       - name: Checkout repository
@@ -37,6 +40,20 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
+      #########################################
+      # 关键修复：为不同平台正确安装 sharp
+      #########################################
+      - name: Install platform-specific sharp
+        run: |
+          npm uninstall sharp
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "Installing sharp for macOS (darwin-x64)"
+            npm install --platform=darwin --arch=x64 sharp
+          else
+            echo "Installing sharp for Windows (win32-x64)"
+            npm install --platform=win32 --arch=x64 sharp
+          fi
+
       - name: Build renderer process
         run: npm run build:renderer
 
@@ -48,12 +65,38 @@ jobs:
           node -e "let pkg=require('./package.json'); pkg.version='${{ env.VERSION }}'; require('fs').writeFileSync('./package.json', JSON.stringify(pkg,null,2));"
 
       #########################################
-      # 重建 native 模块 (sharp 等) 适配 Electron
+      # 配置 electron-builder 支持 sharp
+      #########################################
+      - name: Configure electron-builder for sharp
+        run: |
+          node -e "
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('./package.json'));
+          pkg.build = pkg.build || {};
+          pkg.build.asarUnpack = pkg.build.asarUnpack || [];
+          // 添加 sharp 相关模块到 asarUnpack
+          const unpackModules = [
+            '**/node_modules/sharp/**',
+            '**/node_modules/@img/**'
+          ];
+          unpackModules.forEach(module => {
+            if (!pkg.build.asarUnpack.includes(module)) {
+              pkg.build.asarUnpack.push(module);
+            }
+          });
+          fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2));
+          console.log('Updated package.json with asarUnpack configuration');
+          "
+
+      #########################################
+      # 重建 native 模块适配 Electron
       #########################################
       - name: Rebuild native modules for Electron
         run: |
-          npx electron-builder install-app-deps
-          npx electron-rebuild -f -w sharp
+          # 安装 electron-rebuild 如果尚未安装
+          npm install --save-dev electron-rebuild
+          # 重建 sharp 模块
+          npx electron-rebuild -v $(node -p "require('./package.json').devDependencies.electron") -f -w sharp
 
       #########################################
       # macOS 构建
@@ -62,7 +105,11 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           mkdir -p dist/mac
+          echo "Building macOS application..."
           npx electron-builder --mac --x64 --arm64 --publish=never
+          # 验证构建结果
+          ls -la dist/ || echo "dist directory not found"
+          ls -la dist/mac/ || echo "dist/mac directory not found"
 
       #########################################
       # Windows 构建
@@ -71,11 +118,39 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          npx electron-builder install-app-deps
-          npx electron-rebuild -f -w sharp
+          # Windows 平台也需要重新安装 sharp
+          npm uninstall sharp
+          npm install --platform=win32 --arch=x64 sharp
+          # 重新构建原生模块
+          npx electron-rebuild -v $(node -p "require('./package.json').devDependencies.electron") -f -w sharp
+          # 执行构建
           npx electron-builder --win --x64 --publish=never
+          # 创建 windows 目录并移动文件
           New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
+          $exeFiles = Get-ChildItem -Path "dist" -Filter "*.exe"
+          foreach ($file in $exeFiles) {
+              Write-Host "Found executable: $($file.Name)"
+          }
           Move-Item dist/*Setup*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
+          # 验证结果
+          Write-Host "Windows build contents:"
+          Get-ChildItem -Path "dist" -Recurse | ForEach-Object { Write-Host $_.FullName }
+
+      #########################################
+      # 验证构建产物
+      #########################################
+      - name: Verify build artifacts
+        run: |
+          echo "=== Build Artifacts ==="
+          find dist/ -type f -name "*.${{ env.VERSION }}*" 2>/dev/null || echo "No version-specific files found"
+          find dist/ -type f -name "*.dmg" -o -name "*.exe" 2>/dev/null || echo "No installer files found"
+          if [ "$RUNNER_OS" == "macOS" ]; then
+            echo "=== macOS Artifacts ==="
+            ls -la dist/mac/ || echo "macOS artifacts directory not found"
+          else
+            echo "=== Windows Artifacts ==="
+            ls -la dist/windows/ || echo "Windows artifacts directory not found"
+          fi
 
       #########################################
       # 发布 Release
@@ -87,12 +162,20 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: |
             dist/mac/*${{ env.VERSION }}*.dmg
+            dist/mac/*.dmg
             dist/windows/${{ env.APP_NAME }}-windows-${{ env.VERSION }}.exe
+            dist/windows/*.exe
           tag: v${{ env.VERSION }}-${{ github.run_id }}
           name: Build v${{ env.VERSION }} (${{ github.run_id }})
           body: |
             ## Changelog
             $(cat CHANGELOG.md)
+
+            ## Build Information
+            - **Build Number:** ${{ github.run_number }}
+            - **Build ID:** ${{ github.run_id }}
+            - **Platforms:** ${{ matrix.os }}
+            - **Node.js:** ${{ matrix.node }}
           draft: false
           prerelease: false
           allowUpdates: true
