@@ -57,7 +57,7 @@ jobs:
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          npm run dist
+          npx electron-builder --win --x64 --publish=never -c.extraMetadata.version=${env:VERSION}
           New-Item -ItemType Directory -Path dist/windows -Force | Out-Null
           Move-Item dist/*.exe dist/windows/${env:APP_NAME}-windows-${env:VERSION}.exe -ErrorAction Ignore
 
