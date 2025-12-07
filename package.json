@@ -12,9 +12,9 @@
   },
   "build": {
     "appId": "com.sunshine.app",
-    "productName": "SunshineImageConverter",
+    "productName": "阳光图片转换器",
     "directories": {
-      "output": "dist/mac"
+      "output": "dist"
     },
     "files": [
       "src/**/*",
@@ -27,22 +27,9 @@
     "mac": {
       "icon": "build/icon.icns",
       "target": [
-        {
-          "target": "dmg",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        }
+        "dmg"
       ],
-      "artifactName": "${productName}-${version}-${arch}.dmg",
-      "identity": null,
-      "extendInfo": {
-        "CFBundleDisplayName": "阳光图片转换器"
-      }
-    },
-    "dmg": {
-      "format": "UDZO"
+      "identity": null
     },
     "win": {
       "icon": "build/icon.ico",
