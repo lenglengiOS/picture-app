@@ -1,5 +1,6 @@
 {
   "name": "picture-app",
+  "productName": "阳光图片转换器",
   "version": "1.0.0",
   "main": "src/main.js",
   "scripts": {
