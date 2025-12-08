@@ -1,4 +1,4 @@
-name: Build Electron App
+name: Build and Release Electron App
 
 on:
   push:
@@ -15,53 +15,120 @@ jobs:
         include:
           - os: macos-14
             platform: mac
-            args: --x64
+            arch: x64
+            args: --x64 --mac
 
           - os: macos-14
             platform: mac
-            args: --arm64
+            arch: arm64
+            args: --arm64 --mac
 
           - os: windows-latest
             platform: win
-            args: --x64
+            arch: x64
+            args: --x64 --win
 
     runs-on: ${{ matrix.os }}
-    name: Build for ${{ matrix.platform }} (${{ matrix.args }})
+    name: Build for ${{ matrix.platform }} (${{ matrix.arch }})
 
     steps:
-      #  1. Checkout
+      # 1. Checkout
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       # 2. Setup Node
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: "npm"
 
       # 3. Install dependencies
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       # 4. 构建 Electron
       - name: Build Electron App
-        run: npx electron-builder ${{ matrix.args }} --publish=never
+        run: npm run build:renderer && npx electron-builder ${{ matrix.args }} --publish=never
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # 5. 上传构建产物
+      # 5. 重命名并上传构建产物（解决同名问题）
+      - name: Rename and Prepare Artifacts
+        shell: bash
+        run: |
+          cd dist
+          # 根据平台和架构重命名文件
+          if [[ "${{ matrix.platform }}" == "mac" ]]; then
+            if [[ "${{ matrix.arch }}" == "x64" ]]; then
+              find . -name "*.dmg" -exec mv {} picture-app-${{ github.ref_name }}-mac-x64.dmg \;
+              find . -name "*.blockmap" -exec mv {} picture-app-${{ github.ref_name }}-mac-x64.dmg.blockmap \;
+            elif [[ "${{ matrix.arch }}" == "arm64" ]]; then
+              find . -name "*.dmg" -exec mv {} picture-app-${{ github.ref_name }}-mac-arm64.dmg \;
+              find . -name "*.blockmap" -exec mv {} picture-app-${{ github.ref_name }}-mac-arm64.dmg.blockmap \;
+            fi
+          elif [[ "${{ matrix.platform }}" == "win" ]]; then
+            find . -name "*.exe" -exec mv {} picture-app-${{ github.ref_name }}-win-x64.exe \;
+            find . -name "*.blockmap" -exec mv {} picture-app-${{ github.ref_name }}-win-x64.exe.blockmap \;
+          fi
+
+      # 6. 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.platform }}-${{ matrix.args }}-installer
+          name: ${{ matrix.platform }}-${{ matrix.arch }}-installer
           path: |
             dist/*.dmg
             dist/*.exe
             dist/*.msi
+            dist/*.blockmap
+            dist/*.yml
           retention-days: 7
 
-      # 6. 发布到 Release（使用 GH_TOKEN）
-      - name: Publish Release Assets
-        run: npx electron-builder ${{ matrix.args }} --publish=always
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: "*installer"
+          merge-multiple: true
+
+      - name: List downloaded files
+        run: find artifacts -type f
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/**/*.dmg
+            artifacts/**/*.exe
+            artifacts/**/*.msi
+            artifacts/**/*.blockmap
+            artifacts/**/*.yml
+          body: |
+            ## 阳光图片转换器 ${{ github.ref_name }}
+
+            ### 下载对应平台的安装包：
+
+            **macOS:**
+            - Intel (x64): `picture-app-${{ github.ref_name }}-mac-x64.dmg`
+            - Apple Silicon (arm64): `picture-app-${{ github.ref_name }}-mac-arm64.dmg`
+
+            **Windows:**
+            - `picture-app-${{ github.ref_name }}-win-x64.exe`
