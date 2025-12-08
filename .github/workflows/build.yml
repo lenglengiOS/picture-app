@@ -64,7 +64,10 @@ jobs:
           # 设置较长的保留时间，便于下载
           retention-days: 7
 
+      - name: Build Electron App
+        run: npx electron-builder ${{ matrix.args }} --publish=never
+
       - name: Publish Release Assets
-        run: npx electron-builder --publish always
+        run: npx electron-builder ${{ matrix.args }} --publish=always
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
