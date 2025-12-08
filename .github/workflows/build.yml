@@ -13,14 +13,15 @@ jobs:
     # 使用矩阵策略，定义三个构建环境并行执行
     strategy:
       matrix:
-        os: [macos-14, windows-latest]
         include:
           - os: macos-14
             platform: mac
             args: --x64
+
           - os: macos-14
             platform: mac
             args: --arm64
+
           - os: windows-latest
             platform: win
             args: --x64
