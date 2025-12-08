@@ -63,3 +63,8 @@ jobs:
             dist/*.msi
           # 设置较长的保留时间，便于下载
           retention-days: 7
+
+      - name: Publish Release Assets
+        run: electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
