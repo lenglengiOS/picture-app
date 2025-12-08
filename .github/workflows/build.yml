@@ -1,16 +1,15 @@
-# .github/workflows/build-release.yml
 name: Build Electron App
 
-# 触发条件：推送到 main 分支时运行
 on:
   push:
     branches: [main]
-  # 可选：允许在 GitHub Actions 页面手动触发此工作流
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
-    # 使用矩阵策略，定义三个构建环境并行执行
     strategy:
       matrix:
         include:
@@ -26,33 +25,31 @@ jobs:
             platform: win
             args: --x64
 
-    # 在对应的操作系统上运行
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.platform }} (${{ matrix.args }})
 
     steps:
-      # 1. 检出代码
+      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      # 2. 设置 Node.js 环境
+      # 2. Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22" # 使用与项目兼容的 Node 版本
+          node-version: 22
 
-      # 3. 安装依赖（macOS可能需要处理特定依赖）
+      # 3. Install dependencies
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
 
-      # 4. 执行构建命令
+      # 4. 构建 Electron
       - name: Build Electron App
-        run: npm run dist -- --publish=never
-        env:
-          # 传递给 electron-builder 的参数，指定目标平台和架构
-          ELECTRON_BUILDER_ARGS: ${{ matrix.args }}
+        run: npx electron-builder ${{ matrix.args }} --publish=never
 
-      # 5. 上传构建产物（安装包）
+      # 5. 上传构建产物
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
@@ -61,12 +58,9 @@ jobs:
             dist/*.dmg
             dist/*.exe
             dist/*.msi
-          # 设置较长的保留时间，便于下载
           retention-days: 7
 
-      - name: Build Electron App
-        run: npx electron-builder ${{ matrix.args }} --publish=never
-
+      # 6. 发布到 Release（使用 GH_TOKEN）
       - name: Publish Release Assets
         run: npx electron-builder ${{ matrix.args }} --publish=always
         env:
