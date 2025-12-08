@@ -47,7 +47,7 @@ jobs:
 
       # 4. 执行构建命令
       - name: Build Electron App
-        run: npm run dist
+        run: npm run dist -- --publish=never
         env:
           # 传递给 electron-builder 的参数，指定目标平台和架构
           ELECTRON_BUILDER_ARGS: ${{ matrix.args }}
