@@ -39,14 +39,11 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "18" # 使用与项目兼容的 Node 版本
+          node-version: "22" # 使用与项目兼容的 Node 版本
 
       # 3. 安装依赖（macOS可能需要处理特定依赖）
       - name: Install Dependencies
         run: npm install --legacy-peer-deps
-        # 对于macOS，sharp库可能需要从源码编译，可额外安装必要的工具
-        env:
-          npm_config_build_from_source: ${{ matrix.platform == 'mac' && 'true' || '' }}
 
       # 4. 执行构建命令
       - name: Build Electron App
