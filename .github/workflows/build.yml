@@ -13,11 +13,9 @@ jobs:
     # 使用矩阵策略，定义三个构建环境并行执行
     strategy:
       matrix:
-        # 分别构建 macOS Intel、macOS ARM、Windows x64
-        os: [macos-12, macos-14, windows-latest]
-        # 根据操作系统定义目标平台和架构
+        os: [macos-14, windows-latest]
         include:
-          - os: macos-12
+          - os: macos-14
             platform: mac
             args: --x64
           - os: macos-14
@@ -26,6 +24,7 @@ jobs:
           - os: windows-latest
             platform: win
             args: --x64
+
     # 在对应的操作系统上运行
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.platform }} (${{ matrix.args }})
