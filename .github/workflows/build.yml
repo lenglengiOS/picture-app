@@ -45,18 +45,19 @@ jobs:
           node-version: 22
           cache: "npm"
 
-      # 3. Install dependencies (更新这部分)
+      # 3. Install dependencies (备用方案)
       - name: Install Dependencies
         run: |
-          # 针对macOS，确保安装编译sharp所需的工具链
           if [[ "${{ runner.os }}" == 'macOS' ]]; then
-            # 设置环境变量，强制sharp下载预编译的二进制文件（针对Apple Silicon和Intel）
-            export SHARP_IGNORE_GLOBAL_LIBVIPS=1
-            npm ci --legacy-peer-deps --ignore-scripts
-            npx sharp --version
-          else
-            npm ci --legacy-peer-deps
+            # 1. 安装Xcode命令行工具（包含编译所需的clang等）
+            xcode-select --install 2>/dev/null || true
+            # 2. 显式安装node-gyp和编译sharp所需的工具
+            npm install --global node-gyp
+            # 3. 设置从源码编译的环境变量
+            export npm_config_build_from_source=true
           fi
+          # 4. 安装项目依赖
+          npm ci --legacy-peer-deps
 
       # 4. 构建 Electron
       - name: Build Electron App
