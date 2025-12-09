@@ -16,38 +16,50 @@ jobs:
           - os: macos-14
             platform: mac
             args: --x64
-
           - os: macos-14
             platform: mac
             args: --arm64
-
           - os: windows-latest
             platform: win
             args: --x64
-
     runs-on: ${{ matrix.os }}
     name: Build for ${{ matrix.platform }} (${{ matrix.args }})
 
     steps:
-      # 1. Checkout
       - name: Checkout code
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
 
-      # 2. Setup Node
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 22
 
-      # 3. Install dependencies
-      - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+      # 第一步：安装除sharp外的基础依赖
+      - name: Install Dependencies (Excluding Sharp)
+        run: npm ci --omit=optional --legacy-peer-deps
 
-      # 4. 构建 Electron
+      # 第二步：为目标平台安装正确的sharp二进制文件
+      - name: Install Sharp for Target Platform
+        run: |
+          # 清理可能存在的旧版本
+          npm uninstall sharp || true
+          # 根据矩阵参数决定目标平台
+          if [[ "${{ matrix.args }}" == "--x64" ]]; then
+            # 为Intel Mac (x64)安装
+            npm install --save --cpu=x64 --platform=darwin --libc=glibc sharp@0.34.5
+          elif [[ "${{ matrix.args }}" == "--arm64" ]]; then
+            # 为Apple Silicon Mac (arm64)安装
+            npm install --save --cpu=arm64 --platform=darwin sharp@0.34.5
+          else
+            # 为Windows x64安装（默认参数）
+            npm install --save --cpu=x64 --platform=win32 sharp@0.34.5
+          fi
+
+      # 第三步：进行打包构建
       - name: Build Electron App
-        run: npx electron-builder ${{ matrix.args }} --publish=never
+        run: |
+          npm run build:renderer
+          npx electron-builder ${{ matrix.args }} --publish=never
 
       # 5.  上传构建产物
       - name: Upload Artifact
