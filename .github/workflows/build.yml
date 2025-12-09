@@ -45,12 +45,18 @@ jobs:
           node-version: 22
           cache: "npm"
 
-      # 3. Install dependencies
+      # 3. Install dependencies (更新这部分)
       - name: Install Dependencies
-        run: npm ci --legacy-peer-deps
-        # 对于macOS，sharp库可能需要从源码编译，可额外安装必要的工具
-        env:
-          npm_config_build_from_source: ${{ matrix.platform == 'mac' && 'true' || '' }}
+        run: |
+          # 针对macOS，确保安装编译sharp所需的工具链
+          if [[ "${{ runner.os }}" == 'macOS' ]]; then
+            # 设置环境变量，强制sharp下载预编译的二进制文件（针对Apple Silicon和Intel）
+            export SHARP_IGNORE_GLOBAL_LIBVIPS=1
+            npm ci --legacy-peer-deps --ignore-scripts
+            npx sharp --version
+          else
+            npm ci --legacy-peer-deps
+          fi
 
       # 4. 构建 Electron
       - name: Build Electron App
