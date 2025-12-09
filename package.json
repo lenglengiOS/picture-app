@@ -28,24 +28,15 @@
     "mac": {
       "icon": "build/icon.icns",
       "target": [
-        "dmg",
-        "zip"
+        "dmg"
       ],
-      "identity": null,
-      "artifactName": "picture-app-${version}-${arch}.${ext}"
+      "identity": null
     },
     "win": {
       "icon": "build/icon.ico",
       "target": [
         "nsis"
-      ],
-      "artifactName": "picture-app-setup-${version}.${ext}"
-    },
-    "linux": {
-      "artifactName": "picture-app-${version}-${arch}.${ext}"
-    },
-    "nsis": {
-      "artifactName": "picture-app-setup-${version}.${ext}"
+      ]
     }
   },
   "author": "",
