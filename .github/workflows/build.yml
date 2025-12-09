@@ -41,17 +41,12 @@ jobs:
       # 第二步：为目标平台安装正确的sharp二进制文件
       - name: Install Sharp for Target Platform
         run: |
-          # 清理可能存在的旧版本
           npm uninstall sharp --legacy-peer-deps || true
-          # 根据矩阵参数决定目标平台
-          if [[ "${{ matrix.args }}" == "--x64" ]]; then
-            # 为Intel Mac (x64)安装
+          if [ "${{ matrix.platform }}" == "mac" ] && [ "${{ matrix.args }}" == "--x64" ]; then
             npm install --save --cpu=x64 --platform=darwin --libc=glibc sharp@0.34.5 --legacy-peer-deps
-          elif [[ "${{ matrix.args }}" == "--arm64" ]]; then
-            # 为Apple Silicon Mac (arm64)安装
+          elif [ "${{ matrix.platform }}" == "mac" ] && [ "${{ matrix.args }}" == "--arm64" ]; then
             npm install --save --cpu=arm64 --platform=darwin sharp@0.34.5 --legacy-peer-deps
-          else
-            # 为Windows x64安装（默认参数）
+          elif [ "${{ matrix.platform }}" == "win" ]; then
             npm install --save --cpu=x64 --platform=win32 sharp@0.34.5 --legacy-peer-deps
           fi
 
