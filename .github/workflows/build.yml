@@ -45,18 +45,46 @@ jobs:
           node-version: 22
           cache: "npm"
 
-      # 3. Install dependencies (备用方案)
-      - name: Install Dependencies
+      - name: Cache dependencies
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.npm
+            node_modules
+            ~/.npm/_libvips
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install Windows Build Tools
+        if: runner.os == 'Windows'
         run: |
-          if [[ "${{ runner.os }}" == 'macOS' ]]; then
-            # 1. 安装Xcode命令行工具（包含编译所需的clang等）
+          npm install --global windows-build-tools
+        shell: powershell
+
+      # 3. Install dependencies (跨平台兼容版本)
+      - name: Install Dependencies
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "macOS" ]; then
+            # macOS 特定命令
+            echo "正在为 macOS 环境安装依赖..."
+            # 安装编译工具
             xcode-select --install 2>/dev/null || true
-            # 2. 显式安装node-gyp和编译sharp所需的工具
-            npm install --global node-gyp
-            # 3. 设置从源码编译的环境变量
+            # 安装node-gyp（全局安装可能导致权限问题，推荐项目内安装）
+            npm install node-gyp@latest
+            # 设置环境变量
+            export SHARP_IGNORE_GLOBAL_LIBVIPS=1
             export npm_config_build_from_source=true
+          elif [ "$RUNNER_OS" = "Windows" ]; then
+            echo "正在为 Windows 环境安装依赖..."
+            # Windows 下通常不需要特殊处理
+            # 但可以设置其他环境变量
+          else
+            echo "正在为 Linux 环境安装依赖..."
           fi
-          # 4. 安装项目依赖
+
+          # 所有平台通用：安装依赖
           npm ci --legacy-peer-deps
 
       # 4. 构建 Electron
