@@ -17,42 +17,8 @@ import {
 import "./Detail.css";
 import ImageCompression from "@src/components/ImageCompression";
 
-// async function selectImage() {
-//   return await window.electronAPI.selectImage();
-// }
-
-// async function selectOutputFolder() {
-//   return await window.electronAPI.selectOutputFolder();
-// }
-
-// async function compressImage(options: any) {
-//   return await window.electronAPI.compressImage(options);
-// }
-
 const Detail = () => {
   const [detail, setDetail] = useAtom(showDetailAtom);
-
-  // 示例使用
-  // async function runCompress() {
-  //   const inputPath: any = await selectImage();
-  //   if (!inputPath) return alert("未选择图片");
-
-  //   const outputDir = await selectOutputFolder();
-  //   if (!outputDir) return alert("未选择输出目录");
-
-  //   const outputPath = `${outputDir}/compressed.jpg`;
-
-  //   const result = await compressImage({
-  //     inputPath,
-  //     outputPath,
-  //     width: 800,
-  //     height: null,
-  //     quality: 80,
-  //     maxSizeKB: 200,
-  //   });
-
-  //   console.log("压缩成功", result);
-  // }
 
   return (
     <div className="detail-page">

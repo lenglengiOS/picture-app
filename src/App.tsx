@@ -5,6 +5,7 @@ import Home from "@src/pages/home/Home";
 import Detail from "@src/pages/detail/Detail";
 import { useAtom } from "jotai";
 import { showDetailAtom } from "@src/store/home";
+import { App } from "antd";
 
 const AppContainer = styled.div`
   display: flex;
@@ -13,14 +14,16 @@ const AppContainer = styled.div`
   flex: 1;
 `;
 
-export default function App() {
+export default function PictureApp() {
   const [detail] = useAtom(showDetailAtom);
 
   return (
-    <AppContainer>
-      <TitleBar />
-      {detail === 0 && <Home />}
-      {detail === 1 && <Detail />}
-    </AppContainer>
+    <App>
+      <AppContainer>
+        <TitleBar />
+        {detail === 0 && <Home />}
+        {detail === 1 && <Detail />}
+      </AppContainer>
+    </App>
   );
 }

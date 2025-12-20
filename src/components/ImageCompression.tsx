@@ -3,21 +3,14 @@ import { useAtom } from "jotai";
 import {
   compressionImageListAtom,
   CompressionImageType,
-  showDetailAtom,
 } from "@src/store/home";
-import { Flex, Table, Button, Tag, Radio, Input } from "antd";
+import { Flex, Table, Button, Tag, Radio, Input, App } from "antd";
 import {
-  BlockOutlined,
-  MergeCellsOutlined,
-  BorderInnerOutlined,
   FileImageFilled,
   RightOutlined,
-  SettingOutlined,
   SettingFilled,
-  PlaySquareFilled,
   ProductFilled,
   FileAddOutlined,
-  DeleteTwoTone,
   DeleteOutlined,
   CompressOutlined,
 } from "@ant-design/icons";
@@ -65,6 +58,7 @@ const CompressionImageListView = () => {
   );
   const [customOutputDir, setCustomOutputDir] = useState<string>("");
   const defaultOutputDirRef = useRef<string>("");
+  const { message } = App.useApp();
 
   // 初始化时获取桌面路径
   useEffect(() => {
@@ -114,15 +108,20 @@ const CompressionImageListView = () => {
   const handleOpenCustomDir = async () => {
     if (typeof window === "undefined" || !window.api?.openFolder) {
       message.warning("当前环境不支持打开文件夹");
+      console.log("当前环境不支持打开文件夹");
+
       return;
     }
     if (outputDirMode !== "custom") {
       message.info("请先切换到自定义输出目录");
+      console.log("请先切换到自定义输出目录");
       return;
     }
     const targetPath = getDefaultOutputDir();
+    console.log("targetPath: ", targetPath);
     if (!targetPath) {
       message.error("请先设置自定义输出目录");
+      console.log("请先设置自定义输出目录");
       return;
     }
     try {
@@ -259,10 +258,10 @@ const CompressionImageListView = () => {
         });
       });
 
-      const successTips = finalSavedPath
-        ? `${record.name} 压缩完成，已保存到 ${finalSavedPath}`
-        : `${record.name} 压缩完成`;
-      message.success(successTips);
+      // const successTips = finalSavedPath
+      //   ? `${record.name} 压缩完成，已保存到 ${finalSavedPath}`
+      //   : `${record.name} 压缩完成`;
+      // message.success(successTips);
     } catch (error) {
       console.error("压缩失败:", error);
       message.error(`${record.name} 压缩失败`);
@@ -499,6 +498,10 @@ const CompressionImageListView = () => {
     }, 300); // 300ms 内的多次调用会被合并为一次
   };
 
+  const hasCompressedResult = compressionImageList.some(
+    (item) => item.compressionStatus === "compressed"
+  );
+
   return (
     <div className="detail-right">
       <Flex gap={2} align="center" style={{ height: 40 }}>
@@ -620,7 +623,12 @@ const CompressionImageListView = () => {
                 allowClear
               />
               <Button onClick={handleSelectCustomDir}>更改目录</Button>
-              <Button onClick={handleOpenCustomDir}>打开文件夹</Button>
+              <Button
+                onClick={handleOpenCustomDir}
+                disabled={!hasCompressedResult}
+              >
+                打开文件夹
+              </Button>
               <Button
                 type="primary"
                 onClick={handleBatchCompressSelected}
@@ -640,6 +648,7 @@ const CompressionImageListView = () => {
 const SelectImageView = () => {
   const [, setCompressionImageList] = useAtom(compressionImageListAtom);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const { message } = App.useApp();
 
   // 组件卸载时清理定时器
   useEffect(() => {
