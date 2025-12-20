@@ -9,7 +9,7 @@ const ToolbarContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-left: 68px;
+  padding-left: 12px;
   height: 40px; /* 保留空间，不覆盖系统标题栏 */
   color: white;
   box-sizing: border-box;
